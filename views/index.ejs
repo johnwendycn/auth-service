@@ -3,24 +3,406 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= serviceName %> — Compassionate Capitalism Endpoint</title>
-  <meta name="description" content="Centralized authentication microservice with RS256 JWTs, refresh token rotation, and JWKS distribution for distributed subsystems." />
-  <link rel="stylesheet" href="/css/styles.css" />
+  <title><%= serviceName %> — Authentication API Documentation</title>
+  <meta name="description" content="Enterprise-grade authentication microservice with RS256 JWT, refresh token rotation, and JWKS distribution. Complete API documentation for developers." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f9fafb;
+      color: #111827;
+      line-height: 1.5;
+    }
+
+    /* Top Bar */
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      background: rgba(255,255,255,0.95);
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      text-decoration: none;
+      color: #111827;
+    }
+
+    .brand-mark {
+      background: #0f172a;
+      color: white;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .topnav {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .topnav a {
+      text-decoration: none;
+      color: #4b5563;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .topnav a:hover {
+      color: #0f172a;
+    }
+
+    .pill {
+      background: #eef2ff;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      padding: 4rem 0;
+      border-bottom: 1px solid #334155;
+    }
+
+    .hero-inner {
+      max-width: 900px;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .lede {
+      font-size: 1.25rem;
+      color: #cbd5e1;
+      margin-bottom: 2rem;
+      max-width: 600px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: white;
+      border: 1px solid #475569;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: #64748b;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+
+    .hero-meta strong {
+      color: white;
+      font-weight: 600;
+      display: block;
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Main content */
+    .section {
+      padding: 3rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    h2 {
+      font-size: 1.875rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+      color: #0f172a;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 1.5rem 0 1rem;
+      color: #1e293b;
+    }
+
+    .group-title {
+      margin-top: 2rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .muted {
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+
+    .small {
+      font-size: 0.875rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Endpoint styling */
+    .endpoint {
+      background: white;
+      border-radius: 12px;
+      margin: 1.5rem 0;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+
+    .endpoint-header {
+      padding: 1rem 1.5rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .method {
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      background: #eef2ff;
+      color: #1e40af;
+      font-family: monospace;
+    }
+
+    .method.post { background: #dcfce7; color: #166534; }
+    .method.get { background: #dbeafe; color: #1e40af; }
+    .method.put { background: #fed7aa; color: #9a3412; }
+    .method.delete { background: #fee2e2; color: #991b1b; }
+
+    .path {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      color: #0f172a;
+    }
+
+    .endpoint-body {
+      padding: 1.5rem;
+    }
+
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+    }
+
+    .param-table th, .param-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .param-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85em;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.8rem;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+    }
+
+    .note {
+      background: #fffbeb;
+      border-left: 3px solid #f59e0b;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      color: #6b7280;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tab.active {
+      color: #3b82f6;
+      border-bottom: 2px solid #3b82f6;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .footer {
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      padding: 2rem 0;
+      margin-top: 2rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      text-decoration: none;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+      .topnav { display: none; }
+      .hero h1 { font-size: 2rem; }
+      .container { padding: 0 1rem; }
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
     <div class="container topbar-inner">
       <a href="#" class="brand">
-        <span class="brand-mark">⬢</span>
+        <span class="brand-mark">⚡</span>
         <span class="brand-text"><%= serviceName %></span>
       </a>
       <nav class="topnav">
         <a href="#overview">Overview</a>
-        <a href="#quickstart">Quickstart</a>
-        <a href="#endpoints">API Reference</a>
+        <a href="#endpoints">Endpoints</a>
         <a href="#integration">Integration</a>
         <a href="#security">Security</a>
         <a href="/health" class="pill">/health</a>
@@ -30,23 +412,21 @@
 
   <section class="hero">
     <div class="container hero-inner">
-      <span class="eyebrow">Compassionate Capitalism Endpoint</span>
-      <h1>Centralized authentication, distributed by design.</h1>
+      <span class="eyebrow">Enterprise Authentication Service</span>
+      <h1>Centralized auth,<br>distributed verification.</h1>
       <p class="lede">
-        A production-grade auth microservice that issues RS256 JSON Web Tokens
-        and publishes its public key over JWKS so every subsystem — HR,
-        Finance, Operations — can verify identities locally, with zero
-        round-trips to a central authority.
+        Production-grade authentication microservice issuing RS256 JWT tokens.
+        Verify identities locally across any subsystem using our public JWKS endpoint.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="#quickstart">Get started</a>
-        <a class="btn btn-ghost" href="#endpoints">API reference</a>
+        <a class="btn btn-primary" href="#endpoints">API Reference</a>
+        <a class="btn btn-ghost" href="#integration">Integration Guides</a>
       </div>
       <div class="hero-meta">
-        <div class="meta-item"><strong>Algorithm</strong><span>RS256 / 2048-bit</span></div>
-        <div class="meta-item"><strong>Discovery</strong><span>/.well-known/jwks.json</span></div>
-        <div class="meta-item"><strong>Issuer</strong><span><%= issuer %></span></div>
-        <div class="meta-item"><strong>Status</strong><span class="status-dot">Operational</span></div>
+        <div><strong>Algorithm</strong>RS256 / 2048-bit</div>
+        <div><strong>Discovery</strong>/.well-known/jwks.json</div>
+        <div><strong>Issuer</strong><%= issuer %></div>
+        <div><strong>Status</strong>Operational</div>
       </div>
     </div>
   </section>
@@ -55,236 +435,427 @@
     <!-- Overview -->
     <section id="overview" class="section">
       <h2>Overview</h2>
-      <p class="muted">
-        This service is the single source of identity for your platform. It
-        owns user lifecycle, password policy, email verification, password
-        reset, and token issuance. Downstream services never call it on the
-        hot path — they verify tokens locally using the public key exposed
-        at <code>/.well-known/jwks.json</code>.
-      </p>
-
-      <div class="grid grid-3">
-        <article class="card">
-          <h3>Asymmetric trust</h3>
-          <p>RS256 keypairs let subsystems verify tokens without holding any secret. Rotate keys without redeploying clients.</p>
-        </article>
-        <article class="card">
-          <h3>Refresh rotation</h3>
-          <p>Long-lived opaque refresh tokens are rotated on every use and revoked on password change, reset, or deactivation.</p>
-        </article>
-        <article class="card">
-          <h3>Operational primitives</h3>
-          <p>Email verification, password reset, account deactivation, JTI blacklisting, rate limiting, and structured logs out of the box.</p>
-        </article>
+      <p class="muted">The auth service manages user identity, credentials, and token issuance. Downstream systems validate tokens locally — no round-trips to the auth service on every request.</p>
+      <div class="grid">
+        <div class="card">
+          <h3>🔐 Asymmetric Trust</h3>
+          <p>RS256 keypairs enable any service to verify tokens without holding secrets. Rotate keys without redeploying clients.</p>
+        </div>
+        <div class="card">
+          <h3>🔄 Refresh Token Rotation</h3>
+          <p>Refresh tokens rotate on each use and revoke on password changes, providing secure session management.</p>
+        </div>
+        <div class="card">
+          <h3>📡 JWKS Discovery</h3>
+          <p>Public keys available at <code>/.well-known/jwks.json</code>. Subsystems cache and refresh as needed.</p>
+        </div>
       </div>
     </section>
 
-    <!-- Quickstart -->
-    <section id="quickstart" class="section">
-      <h2>Quickstart</h2>
-      <p class="muted">From clone to a running service in under five minutes.</p>
-
-      <ol class="steps">
-        <li>
-          <h4>1. Install dependencies</h4>
-<pre><code class="lang-bash">npm install</code></pre>
-        </li>
-        <li>
-          <h4>2. Configure environment</h4>
-<pre><code class="lang-bash">cp .env.example .env
-# Edit DB_*, SMTP_*, ADMIN_API_KEY, JWT_ISSUER</code></pre>
-        </li>
-        <li>
-          <h4>3. Generate the RS256 keypair</h4>
-<pre><code class="lang-bash">npm run keys:generate
-# Writes keys/private.pem and keys/public.pem (chmod 600)</code></pre>
-        </li>
-        <li>
-          <h4>4. Run database migrations</h4>
-<pre><code class="lang-bash">npm run migrate</code></pre>
-        </li>
-        <li>
-          <h4>5. Start the service</h4>
-<pre><code class="lang-bash">npm run dev      # development with auto-reload
-npm start        # production</code></pre>
-        </li>
-      </ol>
-    </section>
-
-    <!-- Endpoints -->
+    <!-- API Endpoints -->
     <section id="endpoints" class="section">
       <h2>API Reference</h2>
-      <p class="muted">
-        Base URL: <code><%= baseUrl %></code>. All request and response
-        bodies are JSON. Errors follow
-        <code>{ "error": { "code", "message" } }</code>.
-      </p>
+      <p class="muted">Base URL: <code><%= baseUrl %></code>. All requests and responses use JSON. Errors follow <code>{ "error": { "code", "message" } }</code>.</p>
 
-      <h3 class="group-title">Public</h3>
-      <% publicEndpoints.forEach(function(ep) { %>
-        <%- include('partials/endpoint', { ep: ep }) %>
-      <% }) %>
-
-      <h3 class="group-title">Authenticated</h3>
-      <p class="muted small">Send <code>Authorization: Bearer &lt;access_token&gt;</code>.</p>
-      <% protectedEndpoints.forEach(function(ep) { %>
-        <%- include('partials/endpoint', { ep: ep }) %>
-      <% }) %>
-
-      <h3 class="group-title">Administrative</h3>
-      <p class="muted small">Send <code>X-Admin-Api-Key: &lt;ADMIN_API_KEY&gt;</code>.</p>
-      <% adminEndpoints.forEach(function(ep) { %>
-        <%- include('partials/endpoint', { ep: ep }) %>
-      <% }) %>
-    </section>
-
-    <!-- Integration -->
-    <section id="integration" class="section">
-      <h2>Integrating a subsystem</h2>
-      <p class="muted">
-        Subsystems verify access tokens locally using the public key from
-        the JWKS endpoint. Cache the JWKS response and refresh on
-        <code>kid</code> miss.
-      </p>
-
-      <div class="tabs">
-        <button class="tab active" data-tab="node">Node.js</button>
-        <button class="tab" data-tab="python">Python</button>
-        <button class="tab" data-tab="go">Go</button>
+      <!-- Public Endpoints -->
+      <h3 class="group-title">Public Endpoints</h3>
+      
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method post">POST</span><span class="path">/api/auth/register</span></div>
+        <div class="endpoint-body">
+          <p>Create a new user account. A verification email is sent if email verification is enabled.</p>
+          <table class="param-table"><thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead><tbody>
+            <tr><td><code>email</code></td><td>string</td><td>Valid email address (unique)</td></tr>
+            <tr><td><code>password</code></td><td>string</td><td>Minimum 8 chars, 1 uppercase, 1 number, 1 special</td></tr>
+            <tr><td><code>full_name</code></td><td>string</td><td>Display name</td></tr>
+          </tbody></table>
+          <pre><code>// Response 201 Created
+{
+  "user": { "id": "uuid", "email": "user@example.com", "full_name": "Jane Doe", "is_email_verified": false },
+  "message": "Verification email sent"
+}</code></pre>
+        </div>
       </div>
 
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method post">POST</span><span class="path">/api/auth/login</span></div>
+        <div class="endpoint-body">
+          <p>Authenticate and receive access + refresh tokens. Access token expires in 15 minutes.</p>
+          <table class="param-table"><tbody><tr><td><code>email</code></td><td>string</td></tr><tr><td><code>password</code></td><td>string</td></tr></tbody></table>
+          <pre><code>// Response 200 OK
+{
+  "access_token": "eyJhbGc...",
+  "refresh_token": "d4f8g...",
+  "token_type": "Bearer",
+  "expires_in": 900,
+  "user": { "id": "...", "email": "...", "full_name": "..." }
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method post">POST</span><span class="path">/api/auth/refresh</span></div>
+        <div class="endpoint-body">
+          <p>Rotate refresh token and obtain a new access token pair.</p>
+          <table class="param-table"><tbody><tr><td><code>refresh_token</code></td><td>string</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method post">POST</span><span class="path">/api/auth/forgot-password</span></div>
+        <div class="endpoint-body"><p>Sends a password reset email. Always returns 200 to prevent user enumeration.</p></div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method get">GET</span><span class="path">/.well-known/jwks.json</span></div>
+        <div class="endpoint-body"><p>Public RSA keys in JWKS format for token verification.</p></div>
+      </div>
+
+      <h3 class="group-title">Authenticated Endpoints</h3>
+      <p class="muted small">Include header: <code>Authorization: Bearer &lt;access_token&gt;</code></p>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method get">GET</span><span class="path">/api/auth/me</span></div>
+        <div class="endpoint-body"><p>Returns the authenticated user's profile.</p></div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method put">PUT</span><span class="path">/api/auth/me</span></div>
+        <div class="endpoint-body"><p>Update user profile (full_name).</p></div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method post">POST</span><span class="path">/api/auth/change-password</span></div>
+        <div class="endpoint-body"><p>Change password. Revokes all existing refresh tokens.</p></div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header"><span class="method post">POST</span><span class="path">/api/auth/logout</span></div>
+        <div class="endpoint-body"><p>Blacklists the current access token and invalidates refresh token family.</p></div>
+      </div>
+
+      <h3 class="group-title">Administrative Endpoints</h3>
+      <p class="muted small">Include header: <code>X-Admin-Api-Key: &lt;key&gt;</code></p>
+      <div class="endpoint"><div class="endpoint-header"><span class="method get">GET</span><span class="path">/admin/users</span></div></div>
+      <div class="endpoint"><div class="endpoint-header"><span class="method delete">DELETE</span><span class="path">/admin/users/:id</span></div></div>
+    </section>
+
+    <!-- Integration Section - Professional multi-language samples -->
+    <section id="integration" class="section">
+      <h2>Integration Guides</h2>
+      <p class="muted">Verify access tokens locally in your service. Cache the JWKS response and refresh on unknown <code>kid</code>.</p>
+
+      <div class="tabs" id="languageTabs">
+        <button class="tab active" data-lang="node">Node.js</button>
+        <button class="tab" data-lang="python">Python</button>
+        <button class="tab" data-lang="go">Go</button>
+        <button class="tab" data-lang="java">Java</button>
+        <button class="tab" data-lang="csharp">C#</button>
+        <button class="tab" data-lang="php">PHP</button>
+      </div>
+
+      <!-- Node.js -->
       <div class="tab-panel active" data-panel="node">
-<pre><code class="lang-js">const jwt = require('jsonwebtoken');
+        <pre><code>const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
 const client = jwksClient({
   jwksUri: '<%= baseUrl %>/.well-known/jwks.json',
   cache: true,
-  cacheMaxAge: 10 * 60 * 1000,
+  cacheMaxAge: 600000 // 10 minutes
 });
 
-function getKey(header, cb) {
-  client.getSigningKey(header.kid, (err, key) =>
-    cb(err, key && key.getPublicKey())
-  );
+function verifyToken(token) {
+  return new Promise((resolve, reject) => {
+    function getKey(header, callback) {
+      client.getSigningKey(header.kid, (err, key) => {
+        if (err) return callback(err);
+        callback(null, key.getPublicKey());
+      });
+    }
+    
+    jwt.verify(token, getKey, {
+      algorithms: ['RS256'],
+      issuer: '<%= issuer %>'
+    }, (err, decoded) => {
+      err ? reject(err) : resolve(decoded);
+    });
+  });
 }
 
-function verify(token) {
-  return new Promise((resolve, reject) => {
-    jwt.verify(
-      token,
-      getKey,
-      { algorithms: ['RS256'], issuer: '<%= issuer %>' },
-      (err, payload) => (err ? reject(err) : resolve(payload))
-    );
-  });
-}</code></pre>
+// Express middleware example
+app.use(async (req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing token' });
+  }
+  try {
+    req.user = await verifyToken(auth.split(' ')[1]);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+});</code></pre>
       </div>
 
+      <!-- Python -->
       <div class="tab-panel" data-panel="python">
-<pre><code class="lang-python">import jwt
+        <pre><code>import jwt
 from jwt import PyJWKClient
+from functools import wraps
+from flask import request, jsonify
 
-JWKS_URL = "<%= baseUrl %>/.well-known/jwks.json"
-jwks = PyJWKClient(JWKS_URL)
+JWKS_URL = '<%= baseUrl %>/.well-known/jwks.json'
+jwks_client = PyJWKClient(JWKS_URL, cache_keys=True)
 
-def verify(token: str) -> dict:
-    signing_key = jwks.get_signing_key_from_jwt(token).key
+def verify_token(token: str) -> dict:
+    signing_key = jwks_client.get_signing_key_from_jwt(token).key
     return jwt.decode(
         token,
         signing_key,
-        algorithms=["RS256"],
-        issuer="<%= issuer %>",
-    )</code></pre>
+        algorithms=['RS256'],
+        issuer='<%= issuer %>',
+        options={'require': ['exp', 'iat', 'sub']}
+    )
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+        token = auth_header.split(' ')[1]
+        try:
+            request.user = verify_token(token)
+        except jwt.InvalidTokenError as e:
+            return jsonify({'error': str(e)}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+# Usage
+@app.route('/api/protected')
+@require_auth
+def protected():
+    return jsonify({'user': request.user})</code></pre>
       </div>
 
+      <!-- Go -->
       <div class="tab-panel" data-panel="go">
-<pre><code class="lang-go">import (
-  "github.com/golang-jwt/jwt/v5"
-  "github.com/MicahParks/keyfunc/v3"
+        <pre><code>package main
+
+import (
+    "context"
+    "net/http"
+    "strings"
+    "github.com/golang-jwt/jwt/v5"
+    "github.com/MicahParks/keyfunc/v3"
 )
 
-k, _ := keyfunc.NewDefault([]string{"<%= baseUrl %>/.well-known/jwks.json"})
+var jwks *keyfunc.JWKS
 
-token, err := jwt.Parse(raw, k.Keyfunc,
-  jwt.WithValidMethods([]string{"RS256"}),
-  jwt.WithIssuer("<%= issuer %>"),
-)</code></pre>
+func init() {
+    jwksURL := "<%= baseUrl %>/.well-known/jwks.json"
+    jwks, _ = keyfunc.NewDefault([]string{jwksURL})
+}
+
+func VerifyToken(tokenString string) (*jwt.Token, error) {
+    return jwt.Parse(tokenString, jwks.Keyfunc,
+        jwt.WithValidMethods([]string{"RS256"}),
+        jwt.WithIssuer("<%= issuer %>"),
+    )
+}
+
+func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        auth := r.Header.Get("Authorization")
+        if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
+            http.Error(w, "Unauthorized", http.StatusUnauthorized)
+            return
+        }
+        token := strings.TrimPrefix(auth, "Bearer ")
+        parsed, err := VerifyToken(token)
+        if err != nil || !parsed.Valid {
+            http.Error(w, "Invalid token", http.StatusUnauthorized)
+            return
+        }
+        ctx := context.WithValue(r.Context(), "user", parsed)
+        next(w, r.WithContext(ctx))
+    }
+}</code></pre>
       </div>
 
-      <h3>Token payload</h3>
-<pre><code class="lang-json">{
-  "sub": "42",
+      <!-- Java -->
+      <div class="tab-panel" data-panel="java">
+        <pre><code>import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.SignedJWT;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
+
+public class TokenVerifier {
+    private static JWKSet jwks;
+    private static long lastFetch = 0;
+    
+    private static void refreshJWKS() throws Exception {
+        if (System.currentTimeMillis() - lastFetch > TimeUnit.MINUTES.toMillis(10)) {
+            jwks = JWKSet.load(new URL("<%= baseUrl %>/.well-known/jwks.json"));
+            lastFetch = System.currentTimeMillis();
+        }
+    }
+    
+    public static SignedJWT verify(String token) throws Exception {
+        refreshJWKS();
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        String kid = signedJWT.getHeader().getKeyID();
+        RSAKey rsaKey = jwks.getKeyByKeyId(kid).toRSAKey();
+        JWSVerifier verifier = new RSASSAVerifier(rsaKey);
+        if (!signedJWT.verify(verifier)) {
+            throw new SecurityException("Invalid signature");
+        }
+        // Verify issuer and expiration
+        if (!"<%= issuer %>".equals(signedJWT.getJWTClaimsSet().getIssuer())) {
+            throw new SecurityException("Invalid issuer");
+        }
+        return signedJWT;
+    }
+}</code></pre>
+      </div>
+
+      <!-- C# -->
+      <div class="tab-panel" data-panel="csharp">
+        <pre><code>using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Net.Http;
+using System.Text.Json;
+
+public class JwtValidator
+{
+    private static HttpClient _http = new HttpClient();
+    private static Dictionary&lt;string, SecurityKey&gt; _keyCache = new();
+    
+    public static async Task&lt;JwtSecurityToken&gt; ValidateTokenAsync(string token)
+    {
+        var jwksJson = await _http.GetStringAsync("<%= baseUrl %>/.well-known/jwks.json");
+        var jwks = JsonSerializer.Deserialize&lt;JsonWebKeySet&gt;(jwksJson);
+        
+        var handler = new JwtSecurityTokenHandler();
+        var parameters = new TokenValidationParameters
+        {
+            ValidIssuer = "<%= issuer %>",
+            ValidateIssuer = true,
+            ValidateAudience = false,
+            IssuerSigningKeys = jwks.Keys,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+        
+        handler.ValidateToken(token, parameters, out var validatedToken);
+        return (JwtSecurityToken)validatedToken;
+    }
+}</code></pre>
+      </div>
+
+      <!-- PHP -->
+      <div class="tab-panel" data-panel="php">
+        <pre><code>&lt;?php
+use Firebase\JWT\JWT;
+use Firebase\JWT\JWK;
+use Firebase\JWT\Key;
+
+function verifyToken($token) {
+    $jwksUrl = '<%= baseUrl %>/.well-known/jwks.json';
+    $jwksJson = file_get_contents($jwksUrl);
+    $jwks = json_decode($jwksJson, true);
+    
+    $headers = JWT::headers($token);
+    $kid = $headers['kid'];
+    
+    $keySet = JWK::parseKeySet($jwks);
+    $key = $keySet[$kid];
+    
+    return JWT::decode($token, $key, ['RS256']);
+}
+
+// Middleware example
+$headers = getallheaders();
+if (!isset($headers['Authorization']) || !preg_match('/Bearer\s+(.*)$/', $headers['Authorization'], $matches)) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+try {
+    $user = verifyToken($matches[1]);
+    // Token is valid, proceed with request
+} catch (Exception $e) {
+    http_response_code(401);
+    echo json_encode(['error' => $e->getMessage()]);
+    exit;
+}
+?&gt;</code></pre>
+      </div>
+
+      <h3>Token Payload Structure</h3>
+      <pre><code>{
+  "sub": "42",              // User ID
   "email": "user@example.com",
   "name": "Jane Doe",
-  "iat": 1714000000,
-  "exp": 1714000900,
+  "iat": 1714000000,        // Issued at (Unix timestamp)
+  "exp": 1714000900,        // Expiration (15 minutes)
   "iss": "<%= issuer %>",
-  "jti": "8b1a9953-c761-4e78-9c1c-..."
+  "jti": "8b1a9953-c761-4e78-9c1c-..."  // Unique token ID
 }</code></pre>
+      
+      <div class="note">
+        <strong>🔐 Best Practices:</strong>
+        <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+          <li>Cache JWKS response for 10–60 minutes; refresh only on unknown <code>kid</code></li>
+          <li>Always validate <code>iss</code> and <code>exp</code> claims</li>
+          <li>Never call the auth service on each request — verification is cryptographic and local</li>
+          <li>Use refresh tokens for obtaining new access tokens without re-authentication</li>
+        </ul>
+      </div>
     </section>
 
     <!-- Security -->
     <section id="security" class="section">
-      <h2>Security model</h2>
-      <div class="grid grid-2">
-        <article class="card">
-          <h3>Password storage</h3>
-          <p>Bcrypt with cost factor 12. Plaintext is never logged. Password change and reset both revoke all active refresh tokens.</p>
-        </article>
-        <article class="card">
-          <h3>Token revocation</h3>
-          <p>Logout blacklists the access token's <code>jti</code> until its natural expiry. Refresh tokens are rotated on every use; reuse fails closed.</p>
-        </article>
-        <article class="card">
-          <h3>Email enumeration</h3>
-          <p><code>/forgot-password</code> always returns success regardless of whether the address exists.</p>
-        </article>
-        <article class="card">
-          <h3>Transport &amp; rate limiting</h3>
-          <p>Helmet sets strict security headers. Auth routes are rate-limited (50 req / 15 min / IP). Always terminate TLS at your edge.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Operations -->
-    <section id="operations" class="section">
-      <h2>Operations</h2>
-      <div class="grid grid-2">
-        <article class="card">
-          <h3>Health check</h3>
-          <p><code>GET /health</code> returns <code>{ status, uptime }</code>. Wire it to your load balancer and uptime monitor.</p>
-        </article>
-        <article class="card">
-          <h3>Logging</h3>
-          <p>Structured JSON via Winston. Pipe stdout to your log aggregator (Datadog, Loki, CloudWatch).</p>
-        </article>
-        <article class="card">
-          <h3>Key rotation</h3>
-          <p>Generate a new keypair, bump <code>JWT_KID</code>, deploy. Subsystems pick up the new key on next JWKS refresh — no client redeploy required.</p>
-        </article>
-        <article class="card">
-          <h3>Blacklist hygiene</h3>
-          <p>Schedule <code>Blacklist.cleanup()</code> via cron to purge expired entries and keep the table compact.</p>
-        </article>
+      <h2>Security Model</h2>
+      <div class="grid">
+        <div class="card"><h3>Password Storage</h3><p>Bcrypt cost factor 12. Password changes revoke all refresh tokens.</p></div>
+        <div class="card"><h3>Token Revocation</h3><p>Logout blacklists access token JTI. Refresh tokens rotate on each use.</p></div>
+        <div class="card"><h3>Rate Limiting</h3><p>Auth routes: 50 requests per 15 minutes per IP.</p></div>
+        <div class="card"><h3>Headers & TLS</h3><p>Helmet security headers. Terminate TLS at your edge.</p></div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
     <div class="container footer-inner">
-      <div>
-        <strong><%= serviceName %></strong>
-        <p class="muted small">Compassionate Capitalism Endpoint · v<%= version %></p>
-      </div>
-      <div class="footer-links">
-        <a href="/.well-known/jwks.json">JWKS</a>
-        <a href="/health">Health</a>
-        <a href="#endpoints">API</a>
-      </div>
+      <div><strong><%= serviceName %></strong><p class="muted small">v<%= version %> · Enterprise Authentication Service</p></div>
+      <div class="footer-links"><a href="/.well-known/jwks.json">JWKS</a><a href="/health">Health</a><a href="#endpoints">API</a></div>
     </div>
   </footer>
 
-  <script src="/js/app.js"></script>
+  <script>
+    // Tab switching for language samples
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.tab-panel');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const lang = tab.dataset.lang;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        panels.forEach(panel => {
+          panel.classList.remove('active');
+          if (panel.dataset.panel === lang) {
+            panel.classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>

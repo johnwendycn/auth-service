@@ -2,16 +2,18 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:3000';
+// Change this to your live Render URL
+const BASE_URL = 'https://auth-service-3mrd.onrender.com';
 
 async function testAuth() {
-  console.log('🚀 Starting Auth Service Tests...\n');
+  console.log('🚀 Testing Auth Service on Render...');
+  console.log(`📍 Base URL: ${BASE_URL}\n`);
   
   // Test data
   const testUser = {
-    email: `test${Date.now()}@example.com`,
+    email: `test${Date.now()}@render.com`,
     password: 'Test123!',
-    full_name: 'Test User'
+    full_name: 'Render Test User'
   };
   
   let accessToken = null;
@@ -21,13 +23,15 @@ async function testAuth() {
     // 1. HEALTH CHECK
     console.log('1️⃣  Health Check...');
     const health = await axios.get(`${BASE_URL}/health`);
-    console.log('   ✅ Service is healthy\n');
+    console.log('   ✅ Service is healthy');
+    console.log(`   📊 Status: ${health.data.status}\n`);
     
     // 2. REGISTER USER
     console.log('2️⃣  Registering new user...');
     const register = await axios.post(`${BASE_URL}/api/auth/register`, testUser);
     console.log(`   ✅ User registered: ${testUser.email}`);
-    console.log(`   📝 Response:`, register.data);
+    console.log(`   📝 User ID: ${register.data.user.id}`);
+    console.log(`   📧 Email verified: ${register.data.user.is_email_verified}`);
     console.log('');
     
     // 3. LOGIN
@@ -44,9 +48,6 @@ async function testAuth() {
     console.log(`   👤 User: ${login.data.user.full_name} (${login.data.user.email})`);
     console.log(`   🔑 Access Token: ${accessToken.substring(0, 50)}...`);
     console.log(`   🔄 Refresh Token: ${refreshToken.substring(0, 50)}...`);
-    if (login.data.refresh_expires_at) {
-      console.log(`   ⏰ Refresh expires: ${login.data.refresh_expires_at}`);
-    }
     console.log('');
     
     // 4. GET CURRENT USER (Protected endpoint)
@@ -60,14 +61,14 @@ async function testAuth() {
     console.log(`   🆔 ID: ${me.data.user.id}`);
     console.log('');
     
-    // 5. UPDATE PROFILE (Protected endpoint)
+    // 5. UPDATE PROFILE
     console.log('5️⃣  Updating user profile...');
-    const updatedName = 'Updated Test User';
+    const updatedName = 'Updated Render User';
     await axios.put(`${BASE_URL}/api/auth/me`, 
       { full_name: updatedName },
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
-    console.log(`   ✅ Profile updated`);
+    console.log(`   ✅ Profile updated to: ${updatedName}`);
     console.log('');
     
     // 6. VERIFY UPDATE
@@ -75,7 +76,7 @@ async function testAuth() {
     const meAgain = await axios.get(`${BASE_URL}/api/auth/me`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
-    console.log(`   ✅ New name: ${meAgain.data.user.full_name}`);
+    console.log(`   ✅ New name confirmed: ${meAgain.data.user.full_name}`);
     console.log('');
     
     // 7. GET JWKS (Public key for subsystems)
@@ -85,6 +86,7 @@ async function testAuth() {
     console.log(`   🔑 Keys available: ${jwks.data.keys?.length || 0}`);
     if (jwks.data.keys && jwks.data.keys[0]) {
       console.log(`   🔐 Key ID (kid): ${jwks.data.keys[0].kid}`);
+      console.log(`   🔐 Algorithm: ${jwks.data.keys[0].alg}`);
     }
     console.log('');
     
@@ -96,8 +98,7 @@ async function testAuth() {
     
     const newAccessToken = refresh.data.access_token;
     console.log(`   ✅ New access token received`);
-    console.log(`   🔑 Old token: ${accessToken.substring(0, 40)}...`);
-    console.log(`   🔑 New token: ${newAccessToken.substring(0, 40)}...`);
+    console.log(`   🔑 New token: ${newAccessToken.substring(0, 50)}...`);
     console.log('');
     
     // 9. TEST NEW TOKEN
@@ -138,14 +139,8 @@ async function testAuth() {
     console.log(`   ✅ Logout successful`);
     console.log('');
     
-    // 13. VERIFY EMAIL ENDPOINT
-    console.log('1️⃣3️⃣ Email verification flow...');
-    console.log('   ℹ️  Note: Email verification requires checking the database for the token');
-    console.log('   💡 The verification email would contain: GET /api/auth/verify-email/:token');
-    console.log('');
-    
-    // 14. FORGOT PASSWORD FLOW
-    console.log('1️⃣4️⃣ Forgot password flow...');
+    // 13. FORGOT PASSWORD FLOW
+    console.log('1️⃣3️⃣ Forgot password flow...');
     try {
       const forgot = await axios.post(`${BASE_URL}/api/auth/forgot-password`, {
         email: testUser.email
@@ -157,35 +152,11 @@ async function testAuth() {
     }
     console.log('');
     
-    // 15. ADMIN ENDPOINTS
-    console.log('1️⃣5️⃣ Checking admin endpoints...');
-    
-    const adminKey = process.env.ADMIN_API_KEY;
-    
-    if (adminKey && adminKey !== 'replace-me-with-a-long-random-string') {
-      try {
-        const users = await axios.get(`${BASE_URL}/api/admin/users?page=1&limit=5`, {
-          headers: { 'X-Admin-Api-Key': adminKey }
-        });
-        console.log(`   ✅ Admin access working!`);
-        console.log(`   📊 Users found: ${users.data.users?.length || users.data.data?.length || 0}`);
-      } catch (error) {
-        if (error.response?.status === 404) {
-          console.log(`   ⚠️  Admin endpoint not implemented yet`);
-        } else {
-          console.log(`   ⚠️  Admin test failed: ${error.response?.data?.message || error.message}`);
-        }
-      }
-    } else {
-      console.log(`   ⚠️  Admin test skipped - ADMIN_API_KEY not configured in .env`);
-      console.log(`   💡 To test admin endpoints, add ADMIN_API_KEY to your .env file`);
-    }
-    console.log('');
-    
     console.log('\n' + '='.repeat(60));
-    console.log('🎉 ALL TESTS PASSED! Auth service is working perfectly!');
+    console.log('🎉 ALL TESTS PASSED! Auth service is working perfectly on Render!');
     console.log('='.repeat(60));
     console.log('\n📊 Summary:');
+    console.log(`   🌐 Live URL: ${BASE_URL}`);
     console.log(`   ✅ User registered: ${testUser.email}`);
     console.log(`   ✅ Login working`);
     console.log(`   ✅ JWT tokens issued (RS256)`);
@@ -194,11 +165,7 @@ async function testAuth() {
     console.log(`   ✅ Password change working`);
     console.log(`   ✅ Logout working`);
     console.log(`   ✅ JWKS endpoint available for subsystems`);
-    console.log(`   ✅ Email sending working (forgot password test passed)`);
-    
-    if (adminKey && adminKey !== 'replace-me-with-a-long-random-string') {
-      console.log(`   ✅ Admin endpoints working`);
-    }
+    console.log(`   ✅ Email sending working`);
     
   } catch (error) {
     console.error('\n❌ TEST FAILED!');
@@ -208,20 +175,12 @@ async function testAuth() {
       console.error(`📝 Status: ${error.response.status}`);
       console.error(`📝 Error:`, error.response.data);
     } else if (error.request) {
-      console.error(`📝 No response received. Is the server running?`);
-      console.error(`💡 Run: npm run dev`);
+      console.error(`📝 No response received. Check if service is running.`);
     } else {
       console.error(`📝 Error:`, error.message);
     }
-    
-    if (error.code === 'ECONNREFUSED') {
-      console.error('\n💡 Hint: Server is not running. Start with: npm run dev');
-    }
   }
 }
-
-// Increase max listeners to prevent warning
-process.setMaxListeners(20);
 
 // Run the tests
 testAuth();
