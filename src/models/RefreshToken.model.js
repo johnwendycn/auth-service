@@ -3,34 +3,47 @@ const { pool } = require('../config/database');
 
 module.exports = {
   async create({ user_id, token, expires_at }) {
-    const [r] = await pool.execute(
-      `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (:user_id, :token, :expires_at)`,
-      { user_id, token, expires_at });
-    return r.insertId;
+    const result = await pool.query(
+      `INSERT INTO refresh_tokens (user_id, token, expires_at)
+       VALUES ($1, $2, $3)
+       RETURNING id`,
+      [user_id, token, expires_at]
+    );
+    return result.rows[0].id;
   },
 
   async findByToken(token) {
-    const [rows] = await pool.execute(
-      `SELECT * FROM refresh_tokens WHERE token = :token LIMIT 1`, { token });
-    return rows[0] || null;
+    const result = await pool.query(
+      `SELECT * FROM refresh_tokens WHERE token = $1 LIMIT 1`,
+      [token]
+    );
+    return result.rows[0] || null;
   },
 
   async revoke(token) {
-    const [r] = await pool.execute(
-      `UPDATE refresh_tokens SET revoked_at = CURRENT_TIMESTAMP WHERE token = :token AND revoked_at IS NULL`,
-      { token });
-    return r.affectedRows;
+    const result = await pool.query(
+      `UPDATE refresh_tokens SET revoked_at = CURRENT_TIMESTAMP 
+       WHERE token = $1 AND revoked_at IS NULL
+       RETURNING id`,
+      [token]
+    );
+    return result.rowCount;
   },
 
   async revokeAllForUser(user_id) {
-    const [r] = await pool.execute(
-      `UPDATE refresh_tokens SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = :user_id AND revoked_at IS NULL`,
-      { user_id });
-    return r.affectedRows;
+    const result = await pool.query(
+      `UPDATE refresh_tokens SET revoked_at = CURRENT_TIMESTAMP 
+       WHERE user_id = $1 AND revoked_at IS NULL`,
+      [user_id]
+    );
+    return result.rowCount;
   },
 
   async delete(token) {
-    const [r] = await pool.execute(`DELETE FROM refresh_tokens WHERE token = :token`, { token });
-    return r.affectedRows;
+    const result = await pool.query(
+      `DELETE FROM refresh_tokens WHERE token = $1`,
+      [token]
+    );
+    return result.rowCount;
   },
 };

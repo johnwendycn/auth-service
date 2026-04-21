@@ -1,5 +1,5 @@
 // test.js
-require('dotenv').config(); // Add this to load .env file
+require('dotenv').config();
 const axios = require('axios');
 
 const BASE_URL = 'http://localhost:3000';
@@ -27,7 +27,7 @@ async function testAuth() {
     console.log('2️⃣  Registering new user...');
     const register = await axios.post(`${BASE_URL}/api/auth/register`, testUser);
     console.log(`   ✅ User registered: ${testUser.email}`);
-    console.log(`   📝 User ID: ${register.data.user.id}`);
+    console.log(`   📝 Response:`, register.data);
     console.log('');
     
     // 3. LOGIN
@@ -44,7 +44,9 @@ async function testAuth() {
     console.log(`   👤 User: ${login.data.user.full_name} (${login.data.user.email})`);
     console.log(`   🔑 Access Token: ${accessToken.substring(0, 50)}...`);
     console.log(`   🔄 Refresh Token: ${refreshToken.substring(0, 50)}...`);
-    console.log(`   ⏰ Refresh expires: ${login.data.refresh_expires_at}`);
+    if (login.data.refresh_expires_at) {
+      console.log(`   ⏰ Refresh expires: ${login.data.refresh_expires_at}`);
+    }
     console.log('');
     
     // 4. GET CURRENT USER (Protected endpoint)
@@ -155,10 +157,9 @@ async function testAuth() {
     }
     console.log('');
     
-    // 15. ADMIN ENDPOINTS (Now reads from .env properly)
+    // 15. ADMIN ENDPOINTS
     console.log('1️⃣5️⃣ Checking admin endpoints...');
     
-    // Load admin key from environment (fixed)
     const adminKey = process.env.ADMIN_API_KEY;
     
     if (adminKey && adminKey !== 'replace-me-with-a-long-random-string') {
@@ -167,14 +168,17 @@ async function testAuth() {
           headers: { 'X-Admin-Api-Key': adminKey }
         });
         console.log(`   ✅ Admin access working!`);
-        console.log(`   📊 Total users: ${users.data.pagination?.total || users.data.users?.length || 0}`);
+        console.log(`   📊 Users found: ${users.data.users?.length || users.data.data?.length || 0}`);
       } catch (error) {
-        console.log(`   ⚠️  Admin test failed: ${error.response?.data?.message || error.message}`);
+        if (error.response?.status === 404) {
+          console.log(`   ⚠️  Admin endpoint not implemented yet`);
+        } else {
+          console.log(`   ⚠️  Admin test failed: ${error.response?.data?.message || error.message}`);
+        }
       }
     } else {
       console.log(`   ⚠️  Admin test skipped - ADMIN_API_KEY not configured in .env`);
       console.log(`   💡 To test admin endpoints, add ADMIN_API_KEY to your .env file`);
-      console.log(`   🔑 Example: ADMIN_API_KEY=a7f3e8d9c2b1h4k6m9n2p5q8r3t6w1x4y7z0`);
     }
     console.log('');
     
@@ -194,23 +198,22 @@ async function testAuth() {
     
     if (adminKey && adminKey !== 'replace-me-with-a-long-random-string') {
       console.log(`   ✅ Admin endpoints working`);
-    } else {
-      console.log(`   ⚠️  Admin endpoints: Add ADMIN_API_KEY to .env to enable`);
     }
     
   } catch (error) {
     console.error('\n❌ TEST FAILED!');
     console.error(`📍 Failed at: ${error.config?.url || 'unknown'}`);
-    console.error(`📝 Error:`, error.response?.data || error.message);
     
-    if (error.response?.status === 401) {
-      console.error('\n💡 Hint: Invalid or expired token');
+    if (error.response) {
+      console.error(`📝 Status: ${error.response.status}`);
+      console.error(`📝 Error:`, error.response.data);
+    } else if (error.request) {
+      console.error(`📝 No response received. Is the server running?`);
+      console.error(`💡 Run: npm run dev`);
+    } else {
+      console.error(`📝 Error:`, error.message);
     }
-    if (error.response?.status === 500) {
-      console.error('\n💡 Hint: Check if MySQL is running:');
-      console.error('   - Make sure MySQL service is started');
-      console.error('   - Check your .env database credentials');
-    }
+    
     if (error.code === 'ECONNREFUSED') {
       console.error('\n💡 Hint: Server is not running. Start with: npm run dev');
     }
