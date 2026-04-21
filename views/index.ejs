@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= serviceName %> — Compassionate Capitalism Endpoint</title>
+  <meta name="description" content="Centralized authentication microservice with RS256 JWTs, refresh token rotation, and JWKS distribution for distributed subsystems." />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="#" class="brand">
+        <span class="brand-mark">⬢</span>
+        <span class="brand-text"><%= serviceName %></span>
+      </a>
+      <nav class="topnav">
+        <a href="#overview">Overview</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="#endpoints">API Reference</a>
+        <a href="#integration">Integration</a>
+        <a href="#security">Security</a>
+        <a href="/health" class="pill">/health</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <span class="eyebrow">Compassionate Capitalism Endpoint</span>
+      <h1>Centralized authentication, distributed by design.</h1>
+      <p class="lede">
+        A production-grade auth microservice that issues RS256 JSON Web Tokens
+        and publishes its public key over JWKS so every subsystem — HR,
+        Finance, Operations — can verify identities locally, with zero
+        round-trips to a central authority.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#quickstart">Get started</a>
+        <a class="btn btn-ghost" href="#endpoints">API reference</a>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-item"><strong>Algorithm</strong><span>RS256 / 2048-bit</span></div>
+        <div class="meta-item"><strong>Discovery</strong><span>/.well-known/jwks.json</span></div>
+        <div class="meta-item"><strong>Issuer</strong><span><%= issuer %></span></div>
+        <div class="meta-item"><strong>Status</strong><span class="status-dot">Operational</span></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    <!-- Overview -->
+    <section id="overview" class="section">
+      <h2>Overview</h2>
+      <p class="muted">
+        This service is the single source of identity for your platform. It
+        owns user lifecycle, password policy, email verification, password
+        reset, and token issuance. Downstream services never call it on the
+        hot path — they verify tokens locally using the public key exposed
+        at <code>/.well-known/jwks.json</code>.
+      </p>
+
+      <div class="grid grid-3">
+        <article class="card">
+          <h3>Asymmetric trust</h3>
+          <p>RS256 keypairs let subsystems verify tokens without holding any secret. Rotate keys without redeploying clients.</p>
+        </article>
+        <article class="card">
+          <h3>Refresh rotation</h3>
+          <p>Long-lived opaque refresh tokens are rotated on every use and revoked on password change, reset, or deactivation.</p>
+        </article>
+        <article class="card">
+          <h3>Operational primitives</h3>
+          <p>Email verification, password reset, account deactivation, JTI blacklisting, rate limiting, and structured logs out of the box.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Quickstart -->
+    <section id="quickstart" class="section">
+      <h2>Quickstart</h2>
+      <p class="muted">From clone to a running service in under five minutes.</p>
+
+      <ol class="steps">
+        <li>
+          <h4>1. Install dependencies</h4>
+<pre><code class="lang-bash">npm install</code></pre>
+        </li>
+        <li>
+          <h4>2. Configure environment</h4>
+<pre><code class="lang-bash">cp .env.example .env
+# Edit DB_*, SMTP_*, ADMIN_API_KEY, JWT_ISSUER</code></pre>
+        </li>
+        <li>
+          <h4>3. Generate the RS256 keypair</h4>
+<pre><code class="lang-bash">npm run keys:generate
+# Writes keys/private.pem and keys/public.pem (chmod 600)</code></pre>
+        </li>
+        <li>
+          <h4>4. Run database migrations</h4>
+<pre><code class="lang-bash">npm run migrate</code></pre>
+        </li>
+        <li>
+          <h4>5. Start the service</h4>
+<pre><code class="lang-bash">npm run dev      # development with auto-reload
+npm start        # production</code></pre>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Endpoints -->
+    <section id="endpoints" class="section">
+      <h2>API Reference</h2>
+      <p class="muted">
+        Base URL: <code><%= baseUrl %></code>. All request and response
+        bodies are JSON. Errors follow
+        <code>{ "error": { "code", "message" } }</code>.
+      </p>
+
+      <h3 class="group-title">Public</h3>
+      <% publicEndpoints.forEach(function(ep) { %>
+        <%- include('partials/endpoint', { ep: ep }) %>
+      <% }) %>
+
+      <h3 class="group-title">Authenticated</h3>
+      <p class="muted small">Send <code>Authorization: Bearer &lt;access_token&gt;</code>.</p>
+      <% protectedEndpoints.forEach(function(ep) { %>
+        <%- include('partials/endpoint', { ep: ep }) %>
+      <% }) %>
+
+      <h3 class="group-title">Administrative</h3>
+      <p class="muted small">Send <code>X-Admin-Api-Key: &lt;ADMIN_API_KEY&gt;</code>.</p>
+      <% adminEndpoints.forEach(function(ep) { %>
+        <%- include('partials/endpoint', { ep: ep }) %>
+      <% }) %>
+    </section>
+
+    <!-- Integration -->
+    <section id="integration" class="section">
+      <h2>Integrating a subsystem</h2>
+      <p class="muted">
+        Subsystems verify access tokens locally using the public key from
+        the JWKS endpoint. Cache the JWKS response and refresh on
+        <code>kid</code> miss.
+      </p>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="node">Node.js</button>
+        <button class="tab" data-tab="python">Python</button>
+        <button class="tab" data-tab="go">Go</button>
+      </div>
+
+      <div class="tab-panel active" data-panel="node">
+<pre><code class="lang-js">const jwt = require('jsonwebtoken');
+const jwksClient = require('jwks-rsa');
+
+const client = jwksClient({
+  jwksUri: '<%= baseUrl %>/.well-known/jwks.json',
+  cache: true,
+  cacheMaxAge: 10 * 60 * 1000,
+});
+
+function getKey(header, cb) {
+  client.getSigningKey(header.kid, (err, key) =>
+    cb(err, key && key.getPublicKey())
+  );
+}
+
+function verify(token) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(
+      token,
+      getKey,
+      { algorithms: ['RS256'], issuer: '<%= issuer %>' },
+      (err, payload) => (err ? reject(err) : resolve(payload))
+    );
+  });
+}</code></pre>
+      </div>
+
+      <div class="tab-panel" data-panel="python">
+<pre><code class="lang-python">import jwt
+from jwt import PyJWKClient
+
+JWKS_URL = "<%= baseUrl %>/.well-known/jwks.json"
+jwks = PyJWKClient(JWKS_URL)
+
+def verify(token: str) -> dict:
+    signing_key = jwks.get_signing_key_from_jwt(token).key
+    return jwt.decode(
+        token,
+        signing_key,
+        algorithms=["RS256"],
+        issuer="<%= issuer %>",
+    )</code></pre>
+      </div>
+
+      <div class="tab-panel" data-panel="go">
+<pre><code class="lang-go">import (
+  "github.com/golang-jwt/jwt/v5"
+  "github.com/MicahParks/keyfunc/v3"
+)
+
+k, _ := keyfunc.NewDefault([]string{"<%= baseUrl %>/.well-known/jwks.json"})
+
+token, err := jwt.Parse(raw, k.Keyfunc,
+  jwt.WithValidMethods([]string{"RS256"}),
+  jwt.WithIssuer("<%= issuer %>"),
+)</code></pre>
+      </div>
+
+      <h3>Token payload</h3>
+<pre><code class="lang-json">{
+  "sub": "42",
+  "email": "user@example.com",
+  "name": "Jane Doe",
+  "iat": 1714000000,
+  "exp": 1714000900,
+  "iss": "<%= issuer %>",
+  "jti": "8b1a9953-c761-4e78-9c1c-..."
+}</code></pre>
+    </section>
+
+    <!-- Security -->
+    <section id="security" class="section">
+      <h2>Security model</h2>
+      <div class="grid grid-2">
+        <article class="card">
+          <h3>Password storage</h3>
+          <p>Bcrypt with cost factor 12. Plaintext is never logged. Password change and reset both revoke all active refresh tokens.</p>
+        </article>
+        <article class="card">
+          <h3>Token revocation</h3>
+          <p>Logout blacklists the access token's <code>jti</code> until its natural expiry. Refresh tokens are rotated on every use; reuse fails closed.</p>
+        </article>
+        <article class="card">
+          <h3>Email enumeration</h3>
+          <p><code>/forgot-password</code> always returns success regardless of whether the address exists.</p>
+        </article>
+        <article class="card">
+          <h3>Transport &amp; rate limiting</h3>
+          <p>Helmet sets strict security headers. Auth routes are rate-limited (50 req / 15 min / IP). Always terminate TLS at your edge.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Operations -->
+    <section id="operations" class="section">
+      <h2>Operations</h2>
+      <div class="grid grid-2">
+        <article class="card">
+          <h3>Health check</h3>
+          <p><code>GET /health</code> returns <code>{ status, uptime }</code>. Wire it to your load balancer and uptime monitor.</p>
+        </article>
+        <article class="card">
+          <h3>Logging</h3>
+          <p>Structured JSON via Winston. Pipe stdout to your log aggregator (Datadog, Loki, CloudWatch).</p>
+        </article>
+        <article class="card">
+          <h3>Key rotation</h3>
+          <p>Generate a new keypair, bump <code>JWT_KID</code>, deploy. Subsystems pick up the new key on next JWKS refresh — no client redeploy required.</p>
+        </article>
+        <article class="card">
+          <h3>Blacklist hygiene</h3>
+          <p>Schedule <code>Blacklist.cleanup()</code> via cron to purge expired entries and keep the table compact.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong><%= serviceName %></strong>
+        <p class="muted small">Compassionate Capitalism Endpoint · v<%= version %></p>
+      </div>
+      <div class="footer-links">
+        <a href="/.well-known/jwks.json">JWKS</a>
+        <a href="/health">Health</a>
+        <a href="#endpoints">API</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

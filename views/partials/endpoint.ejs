@@ -1,0 +1,20 @@
+<article class="endpoint">
+  <header class="endpoint-head">
+    <span class="method method-<%= ep.method.toLowerCase() %>"><%= ep.method %></span>
+    <code class="endpoint-path"><%= ep.path %></code>
+    <span class="endpoint-name"><%= ep.name %></span>
+  </header>
+  <p class="endpoint-desc"><%= ep.description %></p>
+  <% if (ep.body) { %>
+    <div class="endpoint-block">
+      <h5>Request body</h5>
+<pre><code class="lang-json"><%= ep.body %></code></pre>
+    </div>
+  <% } %>
+  <% if (ep.response) { %>
+    <div class="endpoint-block">
+      <h5>Response · 2xx</h5>
+<pre><code class="lang-json"><%= ep.response %></code></pre>
+    </div>
+  <% } %>
+</article>
