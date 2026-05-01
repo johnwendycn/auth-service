@@ -27,7 +27,7 @@
       </div>
       
       <form class="api-tester" data-method="<%= ep.method %>" data-path="<%= ep.path %>" data-auth="<%= ep.auth %>">
-        <!-- Path Parameters -->
+        <!-- Parameters -->
         <% if (ep.params && ep.params.length) { %>
           <div class="form-group">
             <label>Parameters</label>
@@ -41,18 +41,24 @@
           </div>
         <% } %>
         
-        <!-- Text Fields for Features and Significants -->
+        <!-- Features and Significants TEXT FIELDS -->
         <% if ((ep.path.includes('/features') || ep.path.includes('/significants')) && (ep.method === 'POST' || ep.method === 'PUT')) { %>
+          
+          <!-- Title Field - REQUIRED -->
           <div class="form-group">
-            <label>Title <span class="required">*</span></label>
-            <input type="text" name="title" class="form-input" placeholder="Enter title">
+            <label>Title <span class="required" style="color:#ef4444;">*</span></label>
+            <input type="text" name="title" class="form-input" placeholder="Enter title" required>
+            <small style="color:#ef4444; display:none;" class="title-error">Title is required</small>
           </div>
           
+          <!-- Description Field - REQUIRED -->
           <div class="form-group">
-            <label>Description <span class="required">*</span></label>
-            <textarea name="description" class="form-textarea" rows="4" placeholder="Enter description"></textarea>
+            <label>Description <span class="required" style="color:#ef4444;">*</span></label>
+            <textarea name="description" class="form-textarea" rows="4" placeholder="Enter description" required></textarea>
+            <small style="color:#ef4444; display:none;" class="desc-error">Description is required</small>
           </div>
           
+          <!-- Features Specific Fields -->
           <% if (ep.path.includes('/features')) { %>
             <div class="form-group">
               <label>Category</label>
@@ -65,6 +71,7 @@
             </div>
           <% } %>
           
+          <!-- Significants Specific Fields -->
           <% if (ep.path.includes('/significants')) { %>
             <div class="form-group">
               <label>Highlight Text</label>
@@ -82,7 +89,7 @@
             </div>
           <% } %>
           
-          <!-- Image Upload -->
+          <!-- Image Upload Dropzone -->
           <div class="form-group">
             <label>Main Image</label>
             <div class="dropzone" data-input="image_input_<%= ep.id %>" data-preview="preview_<%= ep.id %>">
@@ -97,10 +104,12 @@
             <input type="hidden" name="image_url" class="image-url-field">
           </div>
           
+          <!-- Thumbnail URL Field -->
           <div class="form-group">
             <label>Thumbnail URL (Optional)</label>
             <input type="text" name="thumbnail_url" class="form-input" placeholder="https://example.com/thumb.jpg">
           </div>
+          
         <% } else if (ep.body) { %>
           <!-- JSON Editor for other endpoints -->
           <div class="form-group">
@@ -202,9 +211,9 @@
           </tr>
         </thead>
         <tbody class="table-body">
-          <tr class="loading-cell"><td colspan="100">Loading data...</td></tr>
+          <tr class="loading-cell"><td colspan="100">Loading data...<\/td><\/tr>
         </tbody>
-       </table>
+      </table>
     </div>
   </div>
 <% } %>
