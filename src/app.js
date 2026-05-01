@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
+const fs = require('fs');
 
 const logger = require('./utils/logger');
 const swaggerSpecs = require('./config/swagger');
@@ -15,27 +16,35 @@ const featureRoutes = require('./routes/feature.routes');
 const significantRoutes = require('./routes/significant.routes');
 const jwksCtrl = require('./controllers/jwks.controller');
 const landingCtrl = require('./controllers/landing.controller');
-const uploadController = require('./controllers/upload.controller');
 const { notFound, errorHandler } = require('./middleware/error.middleware');
+
+// Import upload modules
+const uploadController = require('./controllers/upload.controller');
 const imageService = require('./services/image.service');
+const admin = require('./middleware/admin.middleware');
 
 const app = express();
 
-// Helmet — relax CSP for EJS landing page and image uploads
+// Helmet with relaxed CSP for inline styles and scripts
+// Update helmet configuration in app.js
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "https://fonts.googleapis.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcAttr: ["'unsafe-inline'"], // This allows inline event handlers
+      imgSrc: ["'self'", "data:", "https://*", "blob:"],
+      connectSrc: ["'self'", "https://*"],
     },
   },
+  crossOriginEmbedderPolicy: false,
 }));
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Views (EJS) and static assets
@@ -74,11 +83,12 @@ app.get('/', landingCtrl.index);
 app.get('/health', (_req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 app.get('/.well-known/jwks.json', jwksCtrl.jwks);
 
+// ============ UPLOAD ROUTES (ADD THIS SECTION) ============
 // Image upload endpoints (admin only)
-const admin = require('./middleware/admin.middleware');
 app.post('/api/upload', admin, imageService.upload.single('image'), uploadController.uploadImage);
 app.post('/api/upload/multiple', admin, imageService.upload.array('images', 5), uploadController.uploadMultipleImages);
 app.delete('/api/upload/:filename', admin, uploadController.deleteImage);
+// =========================================================
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -94,7 +104,6 @@ app.use(errorHandler);
 const PORT = parseInt(process.env.PORT) || 3000;
 
 // Create upload directory if it doesn't exist
-const fs = require('fs');
 const uploadDir = path.join(__dirname, '..', 'public/img');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });

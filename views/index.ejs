@@ -3,24 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= serviceName %> — Compassionate Capitalism Endpoint</title>
-  <meta name="description" content="Centralized authentication microservice with RS256 JWTs, refresh token rotation, and JWKS distribution for distributed subsystems." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <title>Compassionate Capitalism Master API — Auth Service</title>
+  <meta name="description" content="Complete authentication microservice API with RS256 JWTs, refresh token rotation, and JWKS distribution." />
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  
   <style>
+    /* ============================================
+       GLOBAL VARIABLES
+    ============================================ */
     :root {
-      --primary: rgb(176, 0, 31);
-      --primary-dark: rgb(140, 0, 25);
-      --primary-light: rgb(200, 30, 60);
-      --text-light: #ffffff;
-      --text-dark: #1a1a1a;
-      --bg-dark: #0a0a0a;
-      --bg-gray: #f5f5f5;
-      --border: #e0e0e0;
+      --primary: #B0001F;
+      --primary-dark: #8B0018;
+      --primary-light: #D4193A;
+      --primary-glow: rgba(176, 0, 31, 0.2);
+      --secondary: #1a1a2e;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --bg-white: #ffffff;
+      --bg-gray: #f8fafc;
+      --border-light: #e2e8f0;
       --success: #10b981;
-      --error: #ef4444;
+      --success-dark: #059669;
       --warning: #f59e0b;
+      --error: #ef4444;
+      --info: #3b82f6;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
     }
     
     * {
@@ -30,33 +42,140 @@
     }
     
     body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: var(--text-light);
-      line-height: 1.6;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #B0001F 0%, #8B0018 100%);
+      color: var(--text-dark);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    
+    /* Spiral Animation Background */
+    .spiral-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    
+    .spiral {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.03) 0%, transparent 50%);
+      animation: spiralRotate 20s linear infinite;
+    }
+    
+    .spiral::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, 
+        transparent 0deg, 
+        rgba(255,255,255,0.05) 60deg,
+        transparent 120deg,
+        rgba(255,255,255,0.03) 180deg,
+        transparent 240deg,
+        rgba(255,255,255,0.04) 300deg,
+        transparent 360deg);
+      animation: spiralSpin 8s linear infinite;
+      transform-origin: center;
+      border-radius: 50%;
+    }
+    
+    .spiral-circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    
+    .spiral-circle:nth-child(1) {
+      width: 300px;
+      height: 300px;
+      top: 10%;
+      left: -100px;
+      animation-delay: 0s;
+    }
+    
+    .spiral-circle:nth-child(2) {
+      width: 500px;
+      height: 500px;
+      bottom: -150px;
+      right: -150px;
+      animation-delay: 1s;
+    }
+    
+    .spiral-circle:nth-child(3) {
+      width: 200px;
+      height: 200px;
+      top: 50%;
+      left: 70%;
+      animation-delay: 2s;
+    }
+    
+    .spiral-circle:nth-child(4) {
+      width: 150px;
+      height: 150px;
+      bottom: 20%;
+      left: 10%;
+      animation-delay: 0.5s;
+    }
+    
+    .spiral-circle:nth-child(5) {
+      width: 400px;
+      height: 400px;
+      top: -150px;
+      right: 20%;
+      animation-delay: 1.5s;
+    }
+    
+    @keyframes spiralRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes spiralSpin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+    
+    /* ============================================
+       HEADER & NAVIGATION
+    ============================================ */
+    .topbar {
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
     
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 0 24px;
-    }
-    
-    /* Header */
-    .topbar {
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      padding: 0 32px;
+      position: relative;
+      z-index: 2;
     }
     
     .topbar-inner {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 24px;
+      padding: 16px 0;
     }
     
     .brand {
@@ -64,330 +183,553 @@
       align-items: center;
       gap: 12px;
       text-decoration: none;
-      font-weight: 700;
-      font-size: 20px;
-      color: white;
     }
     
-    .brand-mark {
-      font-size: 28px;
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .brand-text {
+      font-weight: 800;
+      font-size: 18px;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+    
+    .brand-sub {
+      font-size: 11px;
+      opacity: 0.7;
+      font-weight: 500;
     }
     
     .topnav {
       display: flex;
-      gap: 24px;
+      gap: 28px;
+      align-items: center;
     }
     
     .topnav a {
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.85);
       text-decoration: none;
-      transition: color 0.3s;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
     }
     
     .topnav a:hover {
       color: white;
     }
     
-    .pill {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 4px 12px;
-      border-radius: 20px;
+    .pill-health {
+      background: rgba(16, 185, 129, 0.2);
+      padding: 6px 14px;
+      border-radius: 100px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.4);
     }
     
     /* Hero Section */
     .hero {
-      padding: 80px 0;
+      padding: 80px 0 60px;
       text-align: center;
+      position: relative;
     }
     
     .eyebrow {
+      display: inline-block;
       text-transform: uppercase;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       font-size: 12px;
-      font-weight: 600;
-      opacity: 0.8;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(4px);
     }
     
     .hero h1 {
-      font-size: 56px;
+      font-size: 64px;
       font-weight: 800;
-      margin: 24px 0;
+      margin-bottom: 24px;
+      color: white;
       line-height: 1.2;
+      letter-spacing: -0.02em;
     }
     
-    .lede {
+    .hero-highlight {
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-lede {
       font-size: 20px;
       max-width: 800px;
-      margin: 0 auto 32px;
-      opacity: 0.9;
+      margin: 0 auto 40px;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.6;
     }
     
-    .hero-actions {
+    .hero-buttons {
       display: flex;
       gap: 16px;
       justify-content: center;
-      margin-bottom: 48px;
-    }
-    
-    .btn {
-      padding: 12px 32px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.3s;
+      margin-bottom: 60px;
     }
     
     .btn-primary {
       background: white;
       color: var(--primary);
+      padding: 12px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-lg);
     }
     
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
     }
     
-    .btn-ghost {
+    .btn-secondary {
       border: 2px solid white;
       color: white;
+      padding: 12px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: all 0.2s;
     }
     
-    .btn-ghost:hover {
+    .btn-secondary:hover {
       background: white;
       color: var(--primary);
     }
     
-    .hero-meta {
+    .hero-stats {
       display: flex;
       justify-content: center;
-      gap: 48px;
+      gap: 64px;
       flex-wrap: wrap;
     }
     
-    .meta-item {
+    .stat-item {
       text-align: center;
     }
     
-    .meta-item strong {
-      display: block;
-      font-size: 14px;
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: white;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
       opacity: 0.7;
     }
     
-    .status-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      background: #10b981;
-      border-radius: 50%;
-      margin-right: 8px;
+    /* Main Content */
+    .main-content {
+      background: var(--bg-gray);
+      border-radius: 48px 48px 0 0;
+      padding: 48px 0;
+      margin-top: 0;
+      position: relative;
+      z-index: 2;
     }
     
-    /* Sections */
     .section {
-      background: white;
-      color: var(--text-dark);
-      border-radius: 16px;
-      padding: 48px;
-      margin-bottom: 48px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 64px;
     }
     
-    .section h2 {
+    .section-title {
       font-size: 32px;
+      font-weight: 700;
       margin-bottom: 16px;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .section-title-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    
+    .section-subtitle {
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      font-size: 16px;
+    }
+    
+    /* Admin Key Bar */
+    .admin-key-bar {
+      background: var(--bg-white);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      border: 1px solid var(--border-light);
+    }
+    
+    .admin-key-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
       color: var(--primary);
     }
     
-    .section .muted {
-      color: #666;
-      margin-bottom: 32px;
-    }
-    
-    /* Cards */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-top: 32px;
-    }
-    
-    .card {
-      padding: 24px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      transition: transform 0.3s;
-    }
-    
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    .card h3 {
-      margin-bottom: 12px;
-      color: var(--primary);
-    }
-    
-    /* Steps */
-    .steps {
-      list-style: none;
-    }
-    
-    .steps li {
-      margin-bottom: 32px;
-    }
-    
-    .steps h4 {
-      margin-bottom: 8px;
-    }
-    
-    pre {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      padding: 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin-top: 8px;
-    }
-    
-    code {
+    .admin-key-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
+      background: var(--bg-gray);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    
+    .copy-key-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .copy-key-btn:hover {
+      background: var(--primary-dark);
     }
     
     /* Endpoint Cards */
     .endpoint-card {
-      background: #f9f9f9;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-      border-left: 4px solid var(--primary);
+      background: var(--bg-white);
+      border-radius: 24px;
+      margin-bottom: 32px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-light);
+    }
+    
+    .endpoint-card:hover {
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-2px);
     }
     
     .endpoint-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border-light);
+      background: linear-gradient(135deg, #fafcfc 0%, #ffffff 100%);
+    }
+    
+    .endpoint-method-badge {
       display: flex;
       align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
+      gap: 12px;
       margin-bottom: 12px;
     }
     
     .method-badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 4px 12px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 11px;
       text-transform: uppercase;
+      letter-spacing: 1px;
     }
     
-    .method-get { background: #10b981; color: white; }
-    .method-post { background: #3b82f6; color: white; }
-    .method-put { background: #f59e0b; color: white; }
-    .method-delete { background: #ef4444; color: white; }
+    .method-get { background: var(--success); color: white; }
+    .method-post { background: var(--info); color: white; }
+    .method-put { background: var(--warning); color: white; }
+    .method-delete { background: var(--error); color: white; }
     
     .endpoint-path {
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
-      background: #e0e0e0;
-      padding: 4px 8px;
-      border-radius: 4px;
-    }
-    
-    .endpoint-title {
-      flex: 1;
-      font-size: 18px;
+      background: var(--bg-gray);
+      padding: 4px 10px;
+      border-radius: 6px;
       color: var(--primary);
     }
     
-    .auth-badge {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 4px;
+    .endpoint-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     
-    .auth-admin { background: #ef4444; color: white; }
-    .auth-user { background: #3b82f6; color: white; }
+    .endpoint-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    
+    .auth-tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    
+    .auth-admin { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+    .auth-user { background: rgba(59, 130, 246, 0.1); color: var(--info); }
     
     .endpoint-description {
-      color: #666;
+      padding: 0 28px;
+      color: var(--text-muted);
+      font-size: 14px;
       margin-bottom: 20px;
     }
     
-    /* Interactive Tabs */
-    .interactive-tabs {
+    /* Split Layout */
+    .endpoint-content-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    
+    @media (max-width: 1000px) {
+      .endpoint-content-split { grid-template-columns: 1fr; }
+    }
+    
+    .endpoint-form-section {
+      padding: 28px;
+      border-right: 1px solid var(--border-light);
+      background: var(--bg-white);
+    }
+    
+    .endpoint-code-section {
+      padding: 28px;
+      background: #1e1e2e;
+    }
+    
+    .section-header {
       display: flex;
+      align-items: center;
       gap: 8px;
-      border-bottom: 2px solid var(--border);
       margin-bottom: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-dark);
     }
     
-    .tab-btn {
-      padding: 8px 16px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-weight: 500;
-      color: #666;
-      transition: all 0.3s;
+    .endpoint-code-section .section-header {
+      color: #e2e8f0;
     }
     
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom: 2px solid var(--primary);
-      margin-bottom: -2px;
-    }
-    
-    .tab-content {
-      display: none;
-    }
-    
-    .tab-content.active {
-      display: block;
+    .section-icon {
+      width: 20px;
+      height: 20px;
     }
     
     /* Forms */
-    .input-group {
-      margin-bottom: 16px;
+    .form-group {
+      margin-bottom: 20px;
     }
     
-    .input-group label {
+    .form-group label {
       display: block;
+      font-weight: 600;
+      font-size: 13px;
       margin-bottom: 8px;
-      font-weight: 500;
+      color: var(--text-dark);
+    }
+    
+    .form-group label .required {
+      color: var(--error);
+    }
+    
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .param-field {
+      margin-bottom: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .param-field .form-input {
+      flex: 1;
     }
     
     .param-type {
-      font-size: 12px;
-      color: #666;
-    }
-    
-    .form-control {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
+      font-size: 11px;
+      background: var(--bg-gray);
+      padding: 4px 8px;
       border-radius: 6px;
-      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+    
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed var(--border-light);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg-gray);
+    }
+    
+    .dropzone:hover {
+      border-color: var(--primary);
+      background: rgba(176, 0, 31, 0.05);
+    }
+    
+    .dropzone.drag-over {
+      border-color: var(--primary);
+      background: rgba(176, 0, 31, 0.1);
+    }
+    
+    .upload-icon {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+    }
+    
+    .image-preview {
+      margin-top: 12px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .image-preview img {
+      max-width: 100%;
+      max-height: 150px;
+      border-radius: 12px;
+    }
+    
+    .remove-image {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--error);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
-    .json-editor {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
+    /* Admin Key Display */
+    .admin-key-container {
+      background: var(--bg-gray);
+      border-radius: 12px;
+      padding: 16px;
     }
     
+    .admin-key-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .key-icon {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .admin-key-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .admin-key-display code {
+      background: var(--bg-white);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      word-break: break-all;
+      flex: 1;
+    }
+    
+    .btn-copy-key {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    /* Buttons */
     .btn-send {
       background: var(--primary);
       color: white;
       border: none;
-      padding: 10px 24px;
-      border-radius: 6px;
-      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      margin-top: 8px;
     }
     
     .btn-send:hover {
@@ -395,69 +737,144 @@
       transform: translateY(-1px);
     }
     
-    .response-area {
-      margin-top: 20px;
+    .btn-format-json {
+      background: none;
+      border: none;
+      color: var(--info);
+      font-size: 12px;
+      margin-top: 6px;
+      cursor: pointer;
     }
     
-    .response-data {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      padding: 16px;
-      border-radius: 8px;
+    .btn-copy-code, .btn-copy-response {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #a0aec0;
+      transition: all 0.2s;
+    }
+    
+    .btn-copy-code:hover, .btn-copy-response:hover {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    
+    /* Code Styling */
+    .code-wrapper {
+      background: #1e1e2e;
+      border-radius: 16px;
+      overflow: auto;
+      margin-bottom: 20px;
+    }
+    
+    .code-wrapper pre {
+      margin: 0;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
       overflow-x: auto;
     }
     
-    /* Code Wrapper */
-    .code-wrapper {
-      position: relative;
+    .code-wrapper code {
+      font-family: 'JetBrains Mono', monospace;
+      color: #e2e8f0;
     }
     
-    .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 4px 12px;
-      border-radius: 4px;
-      cursor: pointer;
+    .code-response-preview {
+      background: #2d2d3a;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .preview-header {
+      background: #252530;
+      padding: 12px 20px;
       font-size: 12px;
+      font-weight: 600;
+      color: #a0aec0;
+      border-bottom: 1px solid #3d3d4a;
     }
     
-    /* Pagination */
-    .pagination-wrapper {
+    .code-response-preview pre {
+      margin: 0;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      color: #cbd5e1;
+    }
+    
+    /* Response Area */
+    .response-area {
       margin-top: 20px;
-      margin-bottom: 40px;
+      background: var(--bg-gray);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .response-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #e2e8f0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .response-data {
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      background: #1a1a2e;
+      color: #e2e8f0;
+      margin: 0;
+    }
+    
+    /* Table / Pagination */
+    .pagination-container {
+      margin: 20px 28px 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-light);
     }
     
     .pagination-controls {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 15px;
       flex-wrap: wrap;
+      margin-bottom: 20px;
     }
     
-    .page-nav {
+    .page-btn {
       padding: 6px 12px;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      background: var(--bg-gray);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
     }
     
-    .page-nav:hover {
+    .page-btn:hover {
       background: var(--primary);
       color: white;
       border-color: var(--primary);
     }
     
+    .page-info {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    
     .page-size-select {
       padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
     }
     
     .table-responsive {
@@ -467,35 +884,46 @@
     .data-table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 14px;
     }
     
     .data-table th {
-      background: var(--primary);
-      color: white;
-      padding: 12px;
       text-align: left;
+      padding: 14px;
+      background: var(--bg-gray);
       font-weight: 600;
+      border-bottom: 2px solid var(--border-light);
     }
     
     .data-table td {
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-light);
     }
     
     .data-table tr:hover {
-      background: rgba(176, 0, 31, 0.05);
+      background: rgba(176, 0, 31, 0.03);
     }
     
-    .loading-row td {
+    .data-table td img {
+      max-width: 40px;
+      max-height: 40px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+    
+    .loading-cell {
       text-align: center;
-      color: #999;
+      color: var(--text-muted);
+      padding: 40px;
     }
     
     /* Footer */
     .footer {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 32px 0;
-      margin-top: 48px;
+      background: #1a1a2e;
+      color: #94a3b8;
+      padding: 48px 0 32px;
+      position: relative;
+      z-index: 2;
     }
     
     .footer-inner {
@@ -503,174 +931,224 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 24px;
     }
     
     .footer-links {
       display: flex;
-      gap: 24px;
+      gap: 32px;
     }
     
     .footer-links a {
-      color: rgba(255, 255, 255, 0.8);
+      color: #94a3b8;
       text-decoration: none;
+      font-size: 14px;
     }
     
     .footer-links a:hover {
       color: white;
     }
     
+    /* Card styling */
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s;
+    }
+    
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
-      .hero h1 { font-size: 32px; }
-      .lede { font-size: 16px; }
+      .container { padding: 0 20px; }
+      .hero h1 { font-size: 36px; }
+      .hero-lede { font-size: 16px; }
+      .hero-stats { gap: 32px; }
+      .section-title { font-size: 24px; }
       .topnav { display: none; }
-      .section { padding: 24px; }
-      .hero-meta { gap: 24px; }
-      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+  <!-- Spiral Animation Background -->
+  <div class="spiral-bg">
+    <div class="spiral"></div>
+    <div class="spiral-circle"></div>
+    <div class="spiral-circle"></div>
+    <div class="spiral-circle"></div>
+    <div class="spiral-circle"></div>
+    <div class="spiral-circle"></div>
+  </div>
+
   <header class="topbar">
     <div class="container topbar-inner">
       <a href="#" class="brand">
-        <span class="brand-mark">⬢</span>
-        <span class="brand-text"><%= serviceName %></span>
+        <div class="brand-icon">⬢</div>
+        <div>
+          <div class="brand-text">Compassionate Capitalism</div>
+          <div class="brand-sub">Master API Endpoint</div>
+        </div>
       </a>
       <nav class="topnav">
         <a href="#overview">Overview</a>
-        <a href="#quickstart">Quickstart</a>
-        <a href="#endpoints">API Reference</a>
+        <a href="#endpoints">Endpoints</a>
         <a href="#integration">Integration</a>
         <a href="#security">Security</a>
-        <a href="/health" class="pill">/health</a>
+        <a href="/health" class="pill-health">🟢 /health</a>
       </nav>
     </div>
   </header>
 
   <section class="hero">
-    <div class="container hero-inner">
-      <span class="eyebrow">Compassionate Capitalism Endpoint</span>
-      <h1>Centralized authentication,<br>distributed by design.</h1>
-      <p class="lede">
-        A production-grade auth microservice that issues RS256 JSON Web Tokens
-        and publishes its public key over JWKS so every subsystem — Periodic Income,
-        Credit, Justice — can verify identities locally, with zero round-trips.
-      </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="#quickstart">Get started</a>
-        <a class="btn btn-ghost" href="#endpoints">API reference</a>
+    <div class="container">
+      <span class="eyebrow">Compassionate Capitalism</span>
+      <h1>Master API <span class="hero-highlight">Endpoint</span></h1>
+      <p class="hero-lede">Centralized authentication, distributed by design. RS256 JWTs with automatic JWKS distribution — zero round-trip verification for all subsystems.</p>
+      <div class="hero-buttons">
+        <a class="btn-primary" href="#endpoints">Explore API</a>
+        <a class="btn-secondary" href="#integration">Integration Guide</a>
       </div>
-      <div class="hero-meta">
-        <div class="meta-item"><strong>Algorithm</strong><span>RS256 / 2048-bit</span></div>
-        <div class="meta-item"><strong>Discovery</strong><span>/.well-known/jwks.json</span></div>
-        <div class="meta-item"><strong>Issuer</strong><span><%= issuer %></span></div>
-        <div class="meta-item"><strong>Status</strong><span class="status-dot"></span>Operational</div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-value">RS256</div><div class="stat-label">Algorithm</div></div>
+        <div class="stat-item"><div class="stat-value">/.well-known/jwks.json</div><div class="stat-label">Discovery</div></div>
+        <div class="stat-item"><div class="stat-value">auth-service</div><div class="stat-label">Issuer</div></div>
+        <div class="stat-item"><div class="stat-value"><span class="status-dot"></span>Operational</div><div class="stat-label">Status</div></div>
       </div>
     </div>
   </section>
 
-  <main class="container">
-    <section id="overview" class="section">
-      <h2>Overview</h2>
-      <p class="muted">
-        This service is the single source of identity for your platform. It
-        owns user lifecycle, password policy, email verification, password
-        reset, and token issuance. Downstream services never call it on the
-        hot path — they verify tokens locally using the public key exposed
-        at <code>/.well-known/jwks.json</code>.
-      </p>
-      <div class="grid grid-3">
-        <article class="card">
-          <h3>🔐 Asymmetric trust</h3>
-          <p>RS256 keypairs let subsystems verify tokens without holding any secret. Rotate keys without redeploying clients.</p>
-        </article>
-        <article class="card">
-          <h3>🔄 Refresh rotation</h3>
-          <p>Long-lived opaque refresh tokens are rotated on every use and revoked on password change, reset, or deactivation.</p>
-        </article>
-        <article class="card">
-          <h3>⚙️ Operational primitives</h3>
-          <p>Email verification, password reset, account deactivation, JTI blacklisting, rate limiting, and structured logs out of the box.</p>
-        </article>
+  <main class="main-content">
+    <div class="container">
+      <!-- Overview Section -->
+      <section id="overview" class="section">
+        <div class="section-title">
+          <div class="section-title-icon">📖</div>
+          <span>Overview</span>
+        </div>
+        <p class="section-subtitle">This service is the single source of identity for your platform.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div class="card">
+            <div style="font-size: 32px; margin-bottom: 12px;">🔐</div>
+            <h3 style="margin-bottom: 8px;">Asymmetric Trust</h3>
+            <p style="color: var(--text-muted);">RS256 keypairs let subsystems verify tokens without holding secrets. Rotate keys without redeployment.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 32px; margin-bottom: 12px;">🔄</div>
+            <h3 style="margin-bottom: 8px;">Refresh Rotation</h3>
+            <p style="color: var(--text-muted);">Long-lived opaque refresh tokens rotate on every use, revoked on password change or deactivation.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 32px; margin-bottom: 12px;">⚙️</div>
+            <h3 style="margin-bottom: 8px;">Operational Primitives</h3>
+            <p style="color: var(--text-muted);">Email verification, password reset, JTI blacklisting, rate limiting, and structured JSON logs.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Key Bar -->
+      <div class="admin-key-bar">
+        <div class="admin-key-label">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Admin API Key:</span>
+        </div>
+        <div class="admin-key-value">
+          <code id="globalAdminKey">a7f3e8d9c2b1h4k6m9n2p5q8r3t6w1x4y7z0</code>
+        </div>
+        <button class="copy-key-btn" onclick="copyGlobalAdminKey()">📋 Copy Key</button>
       </div>
-    </section>
 
-    <section id="quickstart" class="section">
-      <h2>Quickstart</h2>
-      <p class="muted">From clone to a running service in under five minutes.</p>
-      <ol class="steps">
-        <li><h4>1. Install dependencies</h4><pre><code>npm install</code></pre></li>
-        <li><h4>2. Configure environment</h4><pre><code>cp .env.example .env\n# Edit DB_*, SMTP_*, ADMIN_API_KEY, JWT_ISSUER</code></pre></li>
-        <li><h4>3. Generate the RS256 keypair</h4><pre><code>npm run keys:generate</code></pre></li>
-        <li><h4>4. Run database migrations</h4><pre><code>npm run migrate</code></pre></li>
-        <li><h4>5. Start the service</h4><pre><code>npm run dev      # development\nnpm start        # production</code></pre></li>
-      </ol>
-    </section>
+      <!-- Endpoints Section -->
+      <section id="endpoints" class="section">
+        <div class="section-title">
+          <div class="section-title-icon">🔌</div>
+          <span>API Reference</span>
+        </div>
+        <p class="section-subtitle">Base URL: <code style="background:#e2e8f0; padding:4px 10px; border-radius:8px;"><%= baseUrl %></code></p>
 
-    <section id="endpoints" class="section">
-      <h2>API Reference</h2>
-      <p class="muted">Base URL: <code><%= baseUrl %></code>. All request and response bodies are JSON.</p>
-      
-      <h3 style="margin-top: 32px;">🌐 Public Endpoints</h3>
-      <% publicEndpoints.forEach(function(ep) { %>
-        <%- include('partials/endpoint', { ep: ep }) %>
-      <% }) %>
-      
-      <h3 style="margin-top: 48px;">🔒 Authenticated Endpoints</h3>
-      <p class="muted">Send <code>Authorization: Bearer &lt;access_token&gt;</code></p>
-      <% protectedEndpoints.forEach(function(ep) { %>
-        <%- include('partials/endpoint', { ep: ep }) %>
-      <% }) %>
-      
-      <h3 style="margin-top: 48px;">👑 Admin Endpoints</h3>
-      <p class="muted">Send <code>X-Admin-Api-Key: &lt;ADMIN_API_KEY&gt;</code></p>
-      <% adminEndpoints.forEach(function(ep) { %>
-        <%- include('partials/endpoint', { ep: ep }) %>
-      <% }) %>
-    </section>
+        <h3 style="font-size: 20px; margin: 32px 0 20px;">🌐 Public Endpoints</h3>
+        <% publicEndpoints.forEach(function(ep) { %>
+          <%- include('partials/endpoint', { ep: ep }) %>
+        <% }) %>
 
-    <section id="integration" class="section">
-      <h2>Integration Guide</h2>
-      <p class="muted">Verify tokens locally using the JWKS endpoint.</p>
-      <pre><code class="language-javascript">const jwt = require('jsonwebtoken');
+        <h3 style="font-size: 20px; margin: 48px 0 20px;">🔒 Authenticated Endpoints</h3>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Send <code>Authorization: Bearer &lt;access_token&gt;</code></p>
+        <% protectedEndpoints.forEach(function(ep) { %>
+          <%- include('partials/endpoint', { ep: ep }) %>
+        <% }) %>
+
+        <h3 style="font-size: 20px; margin: 48px 0 20px;">👑 Admin Endpoints</h3>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">Send <code>X-Admin-Api-Key: &lt;ADMIN_API_KEY&gt;</code></p>
+        <% adminEndpoints.forEach(function(ep) { %>
+          <%- include('partials/endpoint', { ep: ep }) %>
+        <% }) %>
+      </section>
+
+      <!-- Integration Section -->
+      <section id="integration" class="section">
+        <div class="section-title">
+          <div class="section-title-icon">⚡</div>
+          <span>Integration Guide</span>
+        </div>
+        <p class="section-subtitle">Verify tokens locally using the JWKS endpoint – no round trips to the auth service.</p>
+        <div style="background: #1e1e2e; border-radius: 20px; overflow: hidden;">
+          <pre style="margin:0; padding:24px; overflow-x:auto;"><code style="color:#e2e8f0; font-family:'JetBrains Mono', monospace; font-size:13px;">const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
 const client = jwksClient({
   jwksUri: '<%= baseUrl %>/.well-known/jwks.json',
-  cache: true
+  cache: true,
+  cacheMaxAge: 10 * 60 * 1000,
 });
+
+function getKey(header, cb) {
+  client.getSigningKey(header.kid, (err, key) => {
+    cb(err, key?.getPublicKey());
+  });
+}
 
 function verifyToken(token) {
   return new Promise((resolve, reject) => {
-    jwt.verify(token, (header, cb) => {
-      client.getSigningKey(header.kid, (err, key) => {
-        cb(err, key?.getPublicKey());
-      });
-    }, { algorithms: ['RS256'] }, (err, decoded) => {
+    jwt.verify(token, getKey, {
+      algorithms: ['RS256'],
+      issuer: '<%= issuer %>',
+    }, (err, decoded) => {
       err ? reject(err) : resolve(decoded);
     });
   });
-}</code></pre>
-    </section>
+}
 
-    <section id="security" class="section">
-      <h2>Security Model</h2>
-      <div class="grid grid-2">
-        <div class="card"><h3>🔒 Password Storage</h3><p>Bcrypt with cost factor 12. Passwords are never logged or stored in plaintext.</p></div>
-        <div class="card"><h3>🚫 Token Revocation</h3><p>Logout blacklists the access token's JTI until expiry. Refresh tokens rotate on each use.</p></div>
-        <div class="card"><h3>📧 Email Enumeration</h3><p><code>/forgot-password</code> always returns success regardless of email existence.</p></div>
-        <div class="card"><h3>🛡️ Rate Limiting</h3><p>Auth routes limited to 50 requests per 15 minutes per IP.</p></div>
-      </div>
-    </section>
+// Usage
+const payload = await verifyToken(accessToken);
+console.log('User ID:', payload.sub);</code></pre>
+        </div>
+      </section>
+
+      <!-- Security Section -->
+      <section id="security" class="section">
+        <div class="section-title">
+          <div class="section-title-icon">🛡️</div>
+          <span>Security Model</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+          <div class="card"><h4>🔒 Password Storage</h4><p style="font-size:14px; color:#64748b;">Bcrypt with cost factor 12. Never logged or stored in plaintext.</p></div>
+          <div class="card"><h4>🚫 Token Revocation</h4><p style="font-size:14px; color:#64748b;">Logout blacklists JTI until expiry. Refresh tokens rotate on each use.</p></div>
+          <div class="card"><h4>📧 Email Enumeration</h4><p style="font-size:14px; color:#64748b;">/forgot-password always returns success regardless of email existence.</p></div>
+          <div class="card"><h4>🛡️ Rate Limiting</h4><p style="font-size:14px; color:#64748b;">Auth routes limited to 50 requests per 15 minutes per IP.</p></div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="footer">
     <div class="container footer-inner">
       <div>
-        <strong><%= serviceName %></strong>
-        <p class="muted small" style="margin-top: 8px;">Compassionate Capitalism Endpoint · v<%= version %></p>
+        <strong style="color:white;">Compassionate Capitalism</strong>
+        <p style="margin-top: 8px;">Master API Endpoint · v<%= version %></p>
       </div>
       <div class="footer-links">
         <a href="/.well-known/jwks.json">JWKS</a>
@@ -680,61 +1158,274 @@ function verifyToken(token) {
     </div>
   </footer>
 
-  <script>
+ <script>
+  // Global variables
+  const ADMIN_KEY = 'a7f3e8d9c2b1h4k6m9n2p5q8r3t6w1x4y7z0';
+  
+  // Helper function to copy text
+  function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text);
+    const originalText = button.textContent;
+    button.textContent = '✓ Copied!';
+    setTimeout(() => button.textContent = originalText, 2000);
+  }
+  
+  // Image upload function
+  async function uploadImage(file, previewElement, urlFieldElement) {
+    if (!file) return;
+    
+    previewElement.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">⏳ Uploading...</div>';
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'X-Admin-Api-Key': ADMIN_KEY },
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.data?.url) {
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '×';
+        removeBtn.className = 'remove-image';
+        removeBtn.setAttribute('data-action', 'remove-image');
+        
+        const img = document.createElement('img');
+        img.src = data.data.url;
+        img.alt = 'Uploaded';
+        img.style.maxWidth = '200px';
+        img.style.maxHeight = '150px';
+        img.style.borderRadius = '8px';
+        
+        const container = document.createElement('div');
+        container.style.position = 'relative';
+        container.style.display = 'inline-block';
+        container.appendChild(img);
+        container.appendChild(removeBtn);
+        
+        previewElement.innerHTML = '';
+        previewElement.appendChild(container);
+        
+        if (urlFieldElement) {
+          urlFieldElement.value = data.data.url;
+        }
+        
+        // Update image_url input
+        const imageUrlInput = previewElement.closest('.form-group')?.querySelector('input[name="image_url"]');
+        if (imageUrlInput) {
+          imageUrlInput.value = data.data.url;
+        }
+      } else {
+        previewElement.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444;">❌ Upload failed: ${data.error?.message || 'Unknown error'}</div>`;
+      }
+    } catch(err) {
+      console.error('Upload error:', err);
+      previewElement.innerHTML = `<div style="padding:20px; text-align:center; color:#ef4444;">❌ Upload error: ${err.message}</div>`;
+    }
+  }
+  
+  // Setup drag and drop
+  function setupDropzone(dropzone, fileInput, preview, urlField) {
+    if (!dropzone || !fileInput) return;
+    
+    dropzone.addEventListener('click', () => fileInput.click());
+    
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    });
+    
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('drag-over');
+    });
+    
+    dropzone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        await uploadImage(file, preview, urlField);
+      } else if (file) {
+        alert('Please drop an image file');
+      }
+    });
+    
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        await uploadImage(file, preview, urlField);
+      }
+    });
+  }
+  
+  // Initialize everything when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    // Setup dropzones
+    document.querySelectorAll('.dropzone').forEach((dropzone, index) => {
+      const fileInput = dropzone.querySelector('.file-input');
+      const preview = dropzone.querySelector('.image-preview');
+      const urlField = dropzone.closest('.form-group')?.querySelector('.image-url-field');
+      
+      if (fileInput && preview) {
+        setupDropzone(dropzone, fileInput, preview, urlField);
+      }
+    });
+    
+    // Format JSON buttons
+    document.querySelectorAll('.btn-format-json').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const textarea = btn.previousElementSibling;
+        try {
+          const obj = JSON.parse(textarea.value);
+          textarea.value = JSON.stringify(obj, null, 2);
+        } catch(e) {
+          alert('Invalid JSON');
+        }
+      });
+    });
+    
+    // Copy code buttons
+    document.querySelectorAll('.btn-copy-code').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pre = btn.closest('.endpoint-code-section')?.querySelector('pre code');
+        if (pre) {
+          copyToClipboard(pre.innerText, btn);
+        }
+      });
+    });
+    
+    // Copy response buttons
+    document.querySelectorAll('.btn-copy-response').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const responseData = btn.closest('.response-area')?.querySelector('.response-data');
+        if (responseData) {
+          copyToClipboard(responseData.innerText, btn);
+        }
+      });
+    });
+    
+    // Copy admin key buttons
+    document.querySelectorAll('.btn-copy-key').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const keyCode = btn.closest('.admin-key-display')?.querySelector('.admin-key-code');
+        if (keyCode) {
+          copyToClipboard(ADMIN_KEY, btn);
+        } else {
+          copyToClipboard(ADMIN_KEY, btn);
+        }
+      });
+    });
+    
+    // Global admin key copy
+    const globalCopyBtn = document.querySelector('.copy-key-btn');
+    if (globalCopyBtn) {
+      globalCopyBtn.addEventListener('click', () => {
+        copyToClipboard(ADMIN_KEY, globalCopyBtn);
+      });
+    }
+    
+    // Remove image buttons (dynamic - use event delegation)
+    document.addEventListener('click', (e) => {
+      if (e.target.classList && e.target.classList.contains('remove-image')) {
+        const previewContainer = e.target.closest('.image-preview');
+        if (previewContainer) {
+          previewContainer.innerHTML = '';
+          const urlField = previewContainer.closest('.form-group')?.querySelector('.image-url-field');
+          if (urlField) urlField.value = '';
+        }
+      }
+    });
+    
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const card = btn.closest('.endpoint-interactive');
-        const tabName = btn.dataset.tab;
+        if (!card) return;
+        const tabName = btn.getAttribute('data-tab');
         
         card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         card.querySelectorAll('.tab-content').forEach(content => {
           content.classList.remove('active');
-          if (content.dataset.content === tabName) content.classList.add('active');
+          if (content.getAttribute('data-content') === tabName) content.classList.add('active');
         });
         btn.classList.add('active');
       });
     });
     
-    // API testing
+    // API form submissions
     document.querySelectorAll('.api-tester').forEach(form => {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const method = form.dataset.method;
-        let path = form.dataset.path;
-        const auth = form.dataset.auth;
+        const method = form.getAttribute('data-method');
+        let path = form.getAttribute('data-path');
+        const auth = form.getAttribute('data-auth');
         
-        // Build URL with params
-        const params = {};
+        // Build URL with path params
+        const pathParams = {};
         form.querySelectorAll('[name^="param_"]').forEach(input => {
-          if (input.value) params[input.name.replace('param_', '')] = input.value;
+          if (input.value) pathParams[input.name.replace('param_', '')] = input.value;
         });
         
         let url = `${window.location.origin}${path}`;
-        Object.entries(params).forEach(([key, value]) => {
-          url = url.replace(`:${key}`, value);
+        Object.entries(pathParams).forEach(([key, value]) => {
+          url = url.replace(`:${key}`, encodeURIComponent(value));
         });
         
-        // Headers
-        const headers = {};
+        // Check if file input has a file
+        const fileInput = form.querySelector('.file-input');
+        const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+        
+        let headers = {};
+        let body = null;
+        
+        // Add authentication headers
         if (auth === 'user') {
           const token = form.querySelector('[name="auth_token"]')?.value;
           if (token) headers['Authorization'] = `Bearer ${token}`;
         } else if (auth === 'admin') {
-          const apiKey = form.querySelector('[name="admin_key"]')?.value;
+          const apiKey = form.querySelector('.admin-key-input')?.value || ADMIN_KEY;
           if (apiKey) headers['X-Admin-Api-Key'] = apiKey;
         }
         
-        // Body
-        let body = null;
-        const bodyText = form.querySelector('[name="body"]')?.value;
-        if (bodyText && (method === 'POST' || method === 'PUT')) {
-          try {
-            body = JSON.parse(bodyText);
+        if (hasFile) {
+          // Use FormData for file upload
+          body = new FormData();
+          
+          // Add all text fields
+          form.querySelectorAll('input:not([type="file"]):not([name^="param_"]), textarea').forEach(input => {
+            if (input.name && input.value && !input.name.startsWith('param_')) {
+              body.append(input.name, input.value);
+            }
+          });
+          
+          // Add file
+          if (fileInput.files[0]) {
+            body.append('image', fileInput.files[0]);
+          }
+        } else {
+          // Use JSON for non-file requests
+          const formData = {};
+          form.querySelectorAll('input:not([type="file"]):not([name^="param_"]), textarea').forEach(input => {
+            if (input.name && input.value && !input.name.startsWith('param_') && input.name !== 'body') {
+              formData[input.name] = input.value;
+            }
+          });
+          
+          const bodyText = form.querySelector('[name="body"]')?.value;
+          if (bodyText && (method === 'POST' || method === 'PUT')) {
+            try {
+              const jsonData = JSON.parse(bodyText);
+              Object.assign(formData, jsonData);
+            } catch(err) {}
+          }
+          
+          if (Object.keys(formData).length > 0 && (method === 'POST' || method === 'PUT')) {
+            body = JSON.stringify(formData);
             headers['Content-Type'] = 'application/json';
-          } catch (err) {
-            alert('Invalid JSON in request body');
-            return;
           }
         }
         
@@ -744,7 +1435,17 @@ function verifyToken(token) {
         responseData.textContent = 'Loading...';
         
         try {
-          const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+          const fetchOptions = { method, headers };
+          if (body) {
+            if (hasFile) {
+              delete headers['Content-Type'];
+              fetchOptions.body = body;
+            } else {
+              fetchOptions.body = body;
+            }
+          }
+          
+          const res = await fetch(url, fetchOptions);
           const data = await res.json();
           responseData.textContent = JSON.stringify(data, null, 2);
         } catch (err) {
@@ -753,68 +1454,88 @@ function verifyToken(token) {
       });
     });
     
-    // Copy code
-    window.copyCode = (btn) => {
-      const code = btn.closest('.code-wrapper').querySelector('code').innerText;
-      navigator.clipboard.writeText(code);
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => btn.textContent = '📋 Copy', 2000);
-    };
-    
     // Pagination
     let currentPage = 1;
     let pageSize = 25;
     
     async function loadTable(container, endpoint, page, size) {
       const tbody = container.querySelector('.table-body');
-      tbody.innerHTML = '<tr><td colspan="100">Loading...</td></tr>';
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="100" class="loading-cell">Loading...</td></tr>';
       
       try {
         const res = await fetch(`${window.location.origin}${endpoint}?limit=${size}&offset=${(page-1)*size}`);
         const data = await res.json();
         
         if (data.data && data.data.length) {
+          const headers = container.querySelectorAll('th');
+          const headerCount = headers.length;
           tbody.innerHTML = data.data.map(item => `
-            <tr>${Object.values(item).slice(0, container.querySelectorAll('th').length).map(val => `<td>${val || '-'}</td>`).join('')}</tr>
+            <tr>
+              ${Object.values(item).slice(0, headerCount).map(val => {
+                if (typeof val === 'string' && (val.startsWith('/img/') || val.match(/\.(jpg|png|gif|svg|webp)/i))) {
+                  return `<td><img src="${val}" style="max-width:40px; max-height:40px; border-radius:6px;" onerror="this.style.display='none'"></td>`;
+                }
+                return `<td>${val ?? '-'}</td>`;
+              }).join('')}
+            </tr>
           `).join('');
         } else {
-          tbody.innerHTML = '<tr><td colspan="100">No data available</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="100" class="loading-cell">No data available</td></tr>';
         }
         
+        const totalPages = Math.ceil((data.pagination?.total || 1) / size);
         container.querySelector('.current-page').textContent = page;
-        container.querySelector('.total-pages').textContent = Math.ceil((data.pagination?.total || 1) / size);
+        container.querySelector('.total-pages').textContent = totalPages;
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="100">Error loading data</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="100" class="loading-cell">Error loading data</td></tr>`;
       }
     }
     
-    document.querySelectorAll('.pagination-wrapper').forEach(container => {
-      const endpoint = container.dataset.endpoint;
+    document.querySelectorAll('.pagination-container').forEach(container => {
+      const endpoint = container.getAttribute('data-endpoint');
+      if (!endpoint) return;
+      
       loadTable(container, endpoint, currentPage, pageSize);
       
-      container.querySelector('[data-action="first"]')?.addEventListener('click', () => {
-        currentPage = 1;
-        loadTable(container, endpoint, currentPage, pageSize);
-      });
+      const firstBtn = container.querySelector('[data-action="first"]');
+      const prevBtn = container.querySelector('[data-action="prev"]');
+      const nextBtn = container.querySelector('[data-action="next"]');
+      const lastBtn = container.querySelector('[data-action="last"]');
+      const sizeSelect = container.querySelector('.page-size-select');
       
-      container.querySelector('[data-action="prev"]')?.addEventListener('click', () => {
-        if (currentPage > 1) {
-          currentPage--;
+      if (firstBtn) {
+        firstBtn.addEventListener('click', () => {
+          currentPage = 1;
           loadTable(container, endpoint, currentPage, pageSize);
-        }
-      });
+        });
+      }
       
-      container.querySelector('[data-action="next"]')?.addEventListener('click', () => {
-        currentPage++;
-        loadTable(container, endpoint, currentPage, pageSize);
-      });
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            loadTable(container, endpoint, currentPage, pageSize);
+          }
+        });
+      }
       
-      container.querySelector('.page-size-select')?.addEventListener('change', (e) => {
-        pageSize = parseInt(e.target.value);
-        currentPage = 1;
-        loadTable(container, endpoint, currentPage, pageSize);
-      });
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          currentPage++;
+          loadTable(container, endpoint, currentPage, pageSize);
+        });
+      }
+      
+      if (sizeSelect) {
+        sizeSelect.addEventListener('change', (e) => {
+          pageSize = parseInt(e.target.value);
+          currentPage = 1;
+          loadTable(container, endpoint, currentPage, pageSize);
+        });
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>

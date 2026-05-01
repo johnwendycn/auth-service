@@ -1,15 +1,15 @@
-const featureService = require('../services/feature.service');
+const Feature = require('../models/Feature.model');
 const logger = require('../utils/logger');
 
 module.exports = {
-  async getAll(req, res, next) {
+  // Get all features
+  async getAll(req, res) {
     try {
       const limit = parseInt(req.query.limit) || 100;
       const offset = parseInt(req.query.offset) || 0;
-      const category = req.query.category;
       
-      const features = await featureService.listFeatures(category, limit, offset);
-      const total = await featureService.getFeatureCount();
+      const features = await Feature.getAll(limit, offset);
+      const total = await Feature.getCount();
 
       return res.json({
         success: true,
@@ -18,17 +18,28 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error fetching features:', error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: { code: 'INTERNAL_ERROR', message: error.message }
       });
     }
   },
 
-  async getById(req, res, next) {
+  // Get feature by ID
+  async getById(req, res) {
     try {
       const { id } = req.params;
-      const feature = await featureService.getFeatureById(id);
+      
+      // Validate ID is a number
+      const featureId = parseInt(id);
+      if (isNaN(featureId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid feature ID'
+        });
+      }
+      
+      const feature = await Feature.getById(featureId);
 
       if (!feature) {
         return res.status(404).json({
@@ -43,17 +54,58 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error fetching feature:', error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: { code: 'INTERNAL_ERROR', message: error.message }
       });
     }
   },
 
-  async create(req, res, next) {
+  // Get features by category
+  async getByCategory(req, res) {
     try {
-      const feature = await featureService.createFeature(req.body, req.file);
-      
+      const { category } = req.params;
+      const limit = parseInt(req.query.limit) || 100;
+      const offset = parseInt(req.query.offset) || 0;
+
+      const features = await Feature.getByCategory(category, limit, offset);
+
+      return res.json({
+        success: true,
+        data: features,
+        category
+      });
+    } catch (error) {
+      logger.error('Error fetching features by category:', error);
+      return res.status(500).json({
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: error.message }
+      });
+    }
+  },
+
+  // Create feature (admin only)
+  async create(req, res) {
+    try {
+      const { title, description, image_url, thumbnail_url, category, order } = req.body;
+
+      if (!title || !description) {
+        return res.status(400).json({
+          success: false,
+          message: 'Title and description are required'
+        });
+      }
+
+      const feature = await Feature.createFeature({
+        title,
+        description,
+        image_url: image_url || null,
+        thumbnail_url: thumbnail_url || null,
+        category: category || null,
+        order: order || 0,
+        is_active: true
+      });
+
       logger.info(`Feature created: ${feature.id}`);
       return res.status(201).json({
         success: true,
@@ -62,19 +114,38 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error creating feature:', error);
-      res.status(400).json({
+      return res.status(500).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: error.message }
+        error: { code: 'INTERNAL_ERROR', message: error.message }
       });
     }
   },
 
-  async update(req, res, next) {
+  // Update feature (admin only)
+  async update(req, res) {
     try {
       const { id } = req.params;
-      const feature = await featureService.updateFeature(id, req.body, req.file);
+      
+      // Validate ID is a number
+      const featureId = parseInt(id);
+      if (isNaN(featureId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid feature ID'
+        });
+      }
+      
+      const updates = req.body;
+      const feature = await Feature.updateFeature(featureId, updates);
 
-      logger.info(`Feature updated: ${id}`);
+      if (!feature) {
+        return res.status(404).json({
+          success: false,
+          message: 'Feature not found'
+        });
+      }
+
+      logger.info(`Feature updated: ${featureId}`);
       return res.json({
         success: true,
         message: 'Feature updated successfully',
@@ -82,28 +153,46 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error updating feature:', error);
-      res.status(400).json({
+      return res.status(500).json({
         success: false,
-        error: { code: 'ERROR', message: error.message }
+        error: { code: 'INTERNAL_ERROR', message: error.message }
       });
     }
   },
 
-  async delete(req, res, next) {
+  // Delete feature (admin only)
+  async delete(req, res) {
     try {
       const { id } = req.params;
-      await featureService.deleteFeature(id);
+      
+      // Validate ID is a number
+      const featureId = parseInt(id);
+      if (isNaN(featureId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid feature ID'
+        });
+      }
+      
+      const deleted = await Feature.deleteFeature(featureId);
 
-      logger.info(`Feature deleted: ${id}`);
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          message: 'Feature not found'
+        });
+      }
+
+      logger.info(`Feature deleted: ${featureId}`);
       return res.json({
         success: true,
         message: 'Feature deleted successfully'
       });
     } catch (error) {
       logger.error('Error deleting feature:', error);
-      res.status(404).json({
+      return res.status(500).json({
         success: false,
-        error: { code: 'NOT_FOUND', message: error.message }
+        error: { code: 'INTERNAL_ERROR', message: error.message }
       });
     }
   }

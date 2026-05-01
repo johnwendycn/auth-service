@@ -17,7 +17,7 @@ const Significant = sequelize.define('Significant', {
   },
   image_url: {
     type: DataTypes.STRING(500),
-    allowNull: false
+    allowNull: true
   },
   thumbnail_url: {
     type: DataTypes.STRING(500),
@@ -46,12 +46,12 @@ const Significant = sequelize.define('Significant', {
   updatedAt: 'updated_at'
 });
 
-// Static methods - using the model name directly
+// Static methods
 Significant.getAll = async function(limit = 100, offset = 0) {
   const { rows } = await Significant.findAndCountAll({
     where: { is_active: true },
-    limit,
-    offset,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
     order: [['priority', 'DESC'], ['created_at', 'DESC']],
     raw: true
   });
@@ -59,15 +59,24 @@ Significant.getAll = async function(limit = 100, offset = 0) {
 };
 
 Significant.getById = async function(id) {
-  return await Significant.findByPk(id, { raw: true });
+  const significantId = parseInt(id);
+  if (isNaN(significantId)) return null;
+  
+  const significant = await Significant.findByPk(significantId, { raw: true });
+  if (!significant) return null;
+  return significant;
 };
 
 Significant.getByPriority = async function(priority) {
-  return await Significant.findAll({
-    where: { priority, is_active: true },
+  const priorityValue = parseInt(priority);
+  if (isNaN(priorityValue)) return [];
+  
+  const significants = await Significant.findAll({
+    where: { priority: priorityValue, is_active: true },
     order: [['priority', 'DESC']],
     raw: true
   });
+  return significants;
 };
 
 Significant.createSignificant = async function(data) {
@@ -76,14 +85,20 @@ Significant.createSignificant = async function(data) {
 };
 
 Significant.updateSignificant = async function(id, updates) {
-  const significant = await Significant.findByPk(id);
+  const significantId = parseInt(id);
+  if (isNaN(significantId)) return null;
+  
+  const significant = await Significant.findByPk(significantId);
   if (!significant) return null;
   await significant.update(updates);
   return significant.toJSON();
 };
 
 Significant.deleteSignificant = async function(id) {
-  const significant = await Significant.findByPk(id);
+  const significantId = parseInt(id);
+  if (isNaN(significantId)) return false;
+  
+  const significant = await Significant.findByPk(significantId);
   if (!significant) return false;
   await significant.destroy();
   return true;

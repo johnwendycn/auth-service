@@ -17,7 +17,7 @@ const Feature = sequelize.define('Feature', {
   },
   image_url: {
     type: DataTypes.STRING(500),
-    allowNull: false
+    allowNull: true
   },
   thumbnail_url: {
     type: DataTypes.STRING(500),
@@ -43,12 +43,12 @@ const Feature = sequelize.define('Feature', {
   updatedAt: 'updated_at'
 });
 
-// Static methods - using the model name directly
+// Static methods
 Feature.getAll = async function(limit = 100, offset = 0) {
   const { rows } = await Feature.findAndCountAll({
     where: { is_active: true },
-    limit,
-    offset,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
     order: [['order', 'ASC'], ['created_at', 'DESC']],
     raw: true
   });
@@ -60,7 +60,11 @@ Feature.getAll = async function(limit = 100, offset = 0) {
 };
 
 Feature.getById = async function(id) {
-  const feature = await Feature.findByPk(id, { raw: true });
+  // Ensure id is a number
+  const featureId = parseInt(id);
+  if (isNaN(featureId)) return null;
+  
+  const feature = await Feature.findByPk(featureId, { raw: true });
   if (!feature) return null;
   return feature;
 };
@@ -68,8 +72,8 @@ Feature.getById = async function(id) {
 Feature.getByCategory = async function(category, limit = 100, offset = 0) {
   const features = await Feature.findAll({
     where: { category, is_active: true },
-    limit,
-    offset,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
     order: [['order', 'ASC']],
     raw: true
   });
@@ -82,14 +86,20 @@ Feature.createFeature = async function(data) {
 };
 
 Feature.updateFeature = async function(id, updates) {
-  const feature = await Feature.findByPk(id);
+  const featureId = parseInt(id);
+  if (isNaN(featureId)) return null;
+  
+  const feature = await Feature.findByPk(featureId);
   if (!feature) return null;
   await feature.update(updates);
   return feature.toJSON();
 };
 
 Feature.deleteFeature = async function(id) {
-  const feature = await Feature.findByPk(id);
+  const featureId = parseInt(id);
+  if (isNaN(featureId)) return false;
+  
+  const feature = await Feature.findByPk(featureId);
   if (!feature) return false;
   await feature.destroy();
   return true;
