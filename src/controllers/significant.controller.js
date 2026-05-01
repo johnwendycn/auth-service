@@ -1,5 +1,4 @@
-// CONTROLLER: handles HTTP requests/responses
-const Significant = require('../models/Significant.model');
+const significantService = require('../services/significant.service');
 const logger = require('../utils/logger');
 
 module.exports = {
@@ -7,9 +6,10 @@ module.exports = {
     try {
       const limit = parseInt(req.query.limit) || 100;
       const offset = parseInt(req.query.offset) || 0;
+      const priority = req.query.priority ? parseInt(req.query.priority) : null;
       
-      const significants = await Significant.getAll(limit, offset);
-      const total = await Significant.getCount();
+      const significants = await significantService.listSignificants(priority, limit, offset);
+      const total = await significantService.getSignificantCount();
 
       return res.json({
         success: true,
@@ -28,7 +28,7 @@ module.exports = {
   async getById(req, res, next) {
     try {
       const { id } = req.params;
-      const significant = await Significant.getById(id);
+      const significant = await significantService.getSignificantById(id);
 
       if (!significant) {
         return res.status(404).json({
@@ -53,7 +53,7 @@ module.exports = {
   async getByPriority(req, res, next) {
     try {
       const { priority } = req.params;
-      const significants = await Significant.getByPriority(parseInt(priority));
+      const significants = await significantService.listSignificants(parseInt(priority));
 
       return res.json({
         success: true,
@@ -71,26 +71,17 @@ module.exports = {
 
   async create(req, res, next) {
     try {
-      const { title, description, image_url, thumbnail_url, icon_url, highlight_text, priority } = req.body;
-
-      if (!title || !description || !image_url) {
-        return res.status(400).json({
-          success: false,
-          message: 'Title, description, and image_url are required'
-        });
+      // Handle multiple file uploads
+      let imageFile = null;
+      let iconFile = null;
+      
+      if (req.files) {
+        imageFile = req.files['image'] ? req.files['image'][0] : null;
+        iconFile = req.files['icon'] ? req.files['icon'][0] : null;
       }
-
-      const significant = await Significant.createSignificant({
-        title,
-        description,
-        image_url,
-        thumbnail_url,
-        icon_url,
-        highlight_text,
-        priority: priority || 0,
-        is_active: true
-      });
-
+      
+      const significant = await significantService.createSignificant(req.body, imageFile, iconFile);
+      
       logger.info(`Significant created: ${significant.id}`);
       return res.status(201).json({
         success: true,
@@ -99,9 +90,9 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error creating significant:', error);
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
+        error: { code: 'VALIDATION_ERROR', message: error.message }
       });
     }
   },
@@ -109,16 +100,17 @@ module.exports = {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const updates = req.body;
-
-      const significant = await Significant.updateSignificant(id, updates);
-
-      if (!significant) {
-        return res.status(404).json({
-          success: false,
-          message: 'Significant not found'
-        });
+      
+      // Handle multiple file uploads
+      let imageFile = null;
+      let iconFile = null;
+      
+      if (req.files) {
+        imageFile = req.files['image'] ? req.files['image'][0] : null;
+        iconFile = req.files['icon'] ? req.files['icon'][0] : null;
       }
+      
+      const significant = await significantService.updateSignificant(id, req.body, imageFile, iconFile);
 
       logger.info(`Significant updated: ${id}`);
       return res.json({
@@ -128,9 +120,9 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error updating significant:', error);
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
+        error: { code: 'ERROR', message: error.message }
       });
     }
   },
@@ -138,15 +130,7 @@ module.exports = {
   async delete(req, res, next) {
     try {
       const { id } = req.params;
-
-      const deleted = await Significant.deleteSignificant(id);
-
-      if (!deleted) {
-        return res.status(404).json({
-          success: false,
-          message: 'Significant not found'
-        });
-      }
+      await significantService.deleteSignificant(id);
 
       logger.info(`Significant deleted: ${id}`);
       return res.json({
@@ -155,9 +139,9 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error deleting significant:', error);
-      res.status(500).json({
+      res.status(404).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
+        error: { code: 'NOT_FOUND', message: error.message }
       });
     }
   }

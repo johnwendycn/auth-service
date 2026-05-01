@@ -1,5 +1,4 @@
-// CONTROLLER: handles HTTP requests/responses
-const Feature = require('../models/Feature.model');
+const featureService = require('../services/feature.service');
 const logger = require('../utils/logger');
 
 module.exports = {
@@ -7,9 +6,10 @@ module.exports = {
     try {
       const limit = parseInt(req.query.limit) || 100;
       const offset = parseInt(req.query.offset) || 0;
+      const category = req.query.category;
       
-      const features = await Feature.getAll(limit, offset);
-      const total = await Feature.getCount();
+      const features = await featureService.listFeatures(category, limit, offset);
+      const total = await featureService.getFeatureCount();
 
       return res.json({
         success: true,
@@ -28,7 +28,7 @@ module.exports = {
   async getById(req, res, next) {
     try {
       const { id } = req.params;
-      const feature = await Feature.getById(id);
+      const feature = await featureService.getFeatureById(id);
 
       if (!feature) {
         return res.status(404).json({
@@ -50,49 +50,10 @@ module.exports = {
     }
   },
 
-  async getByCategory(req, res, next) {
-    try {
-      const { category } = req.params;
-      const limit = parseInt(req.query.limit) || 100;
-      const offset = parseInt(req.query.offset) || 0;
-
-      const features = await Feature.getByCategory(category, limit, offset);
-
-      return res.json({
-        success: true,
-        data: features,
-        category
-      });
-    } catch (error) {
-      logger.error('Error fetching features by category:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
-      });
-    }
-  },
-
   async create(req, res, next) {
     try {
-      const { title, description, image_url, thumbnail_url, category, order } = req.body;
-
-      if (!title || !description || !image_url) {
-        return res.status(400).json({
-          success: false,
-          message: 'Title, description, and image_url are required'
-        });
-      }
-
-      const feature = await Feature.createFeature({
-        title,
-        description,
-        image_url,
-        thumbnail_url,
-        category,
-        order: order || 0,
-        is_active: true
-      });
-
+      const feature = await featureService.createFeature(req.body, req.file);
+      
       logger.info(`Feature created: ${feature.id}`);
       return res.status(201).json({
         success: true,
@@ -101,9 +62,9 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error creating feature:', error);
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
+        error: { code: 'VALIDATION_ERROR', message: error.message }
       });
     }
   },
@@ -111,16 +72,7 @@ module.exports = {
   async update(req, res, next) {
     try {
       const { id } = req.params;
-      const updates = req.body;
-
-      const feature = await Feature.updateFeature(id, updates);
-
-      if (!feature) {
-        return res.status(404).json({
-          success: false,
-          message: 'Feature not found'
-        });
-      }
+      const feature = await featureService.updateFeature(id, req.body, req.file);
 
       logger.info(`Feature updated: ${id}`);
       return res.json({
@@ -130,9 +82,9 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error updating feature:', error);
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
+        error: { code: 'ERROR', message: error.message }
       });
     }
   },
@@ -140,15 +92,7 @@ module.exports = {
   async delete(req, res, next) {
     try {
       const { id } = req.params;
-
-      const deleted = await Feature.deleteFeature(id);
-
-      if (!deleted) {
-        return res.status(404).json({
-          success: false,
-          message: 'Feature not found'
-        });
-      }
+      await featureService.deleteFeature(id);
 
       logger.info(`Feature deleted: ${id}`);
       return res.json({
@@ -157,9 +101,9 @@ module.exports = {
       });
     } catch (error) {
       logger.error('Error deleting feature:', error);
-      res.status(500).json({
+      res.status(404).json({
         success: false,
-        error: { code: 'INTERNAL_ERROR', message: error.message }
+        error: { code: 'NOT_FOUND', message: error.message }
       });
     }
   }
