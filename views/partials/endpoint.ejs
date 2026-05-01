@@ -27,10 +27,10 @@
       </div>
       
       <form class="api-tester" data-method="<%= ep.method %>" data-path="<%= ep.path %>" data-auth="<%= ep.auth %>">
-        <!-- Parameters -->
+        <!-- Parameters (Path Params) -->
         <% if (ep.params && ep.params.length) { %>
           <div class="form-group">
-            <label>Parameters</label>
+            <label>Path Parameters</label>
             <% ep.params.forEach(function(param) { %>
               <div class="param-field">
                 <input type="text" name="param_<%= param.name %>" placeholder="<%= param.name %>" class="form-input" data-param-in="<%= param.in %>">
@@ -41,21 +41,154 @@
           </div>
         <% } %>
         
+        <!-- Query Parameters -->
+        <% if (ep.queryParams && ep.queryParams.length) { %>
+          <div class="form-group">
+            <label>Query Parameters</label>
+            <% ep.queryParams.forEach(function(param) { %>
+              <div class="param-field">
+                <input type="text" name="<%= param.name %>" placeholder="<%= param.name %>" class="form-input">
+                <span class="param-type">query</span>
+                <small><%= param.desc %></small>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+        
+        <!-- AUTHENTICATION ENDPOINTS - Special Forms -->
+        
+        <!-- REGISTER Form -->
+        <% if (ep.path === '/api/auth/register' && ep.method === 'POST') { %>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" name="email" class="form-input" placeholder="user@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password <span class="required">*</span></label>
+            <input type="password" name="password" class="form-input" placeholder="Min 8 characters" required>
+          </div>
+          <div class="form-group">
+            <label>Full Name <span class="required">*</span></label>
+            <input type="text" name="full_name" class="form-input" placeholder="John Doe" required>
+          </div>
+        <% } %>
+        
+        <!-- LOGIN Form -->
+        <% if (ep.path === '/api/auth/login' && ep.method === 'POST') { %>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" name="email" class="form-input" placeholder="user@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password <span class="required">*</span></label>
+            <input type="password" name="password" class="form-input" placeholder="Password" required>
+          </div>
+        <% } %>
+        
+        <!-- UPDATE PROFILE Form -->
+        <% if (ep.path === '/api/auth/me' && ep.method === 'PUT') { %>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" name="full_name" class="form-input" placeholder="New full name">
+          </div>
+        <% } %>
+        
+        <!-- CHANGE PASSWORD Form -->
+        <% if (ep.path === '/api/auth/change-password' && ep.method === 'POST') { %>
+          <div class="form-group">
+            <label>Current Password <span class="required">*</span></label>
+            <input type="password" name="current_password" class="form-input" placeholder="Current password" required>
+          </div>
+          <div class="form-group">
+            <label>New Password <span class="required">*</span></label>
+            <input type="password" name="new_password" class="form-input" placeholder="New password (min 8 chars)" required>
+          </div>
+        <% } %>
+        
+        <!-- FORGOT PASSWORD Form -->
+        <% if (ep.path === '/api/auth/forgot-password' && ep.method === 'POST') { %>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" name="email" class="form-input" placeholder="user@example.com" required>
+          </div>
+        <% } %>
+        
+        <!-- RESET PASSWORD Form -->
+        <% if (ep.path === '/api/auth/reset-password' && ep.method === 'POST') { %>
+          <div class="form-group">
+            <label>Reset Token <span class="required">*</span></label>
+            <input type="text" name="token" class="form-input" placeholder="Reset token from email" required>
+          </div>
+          <div class="form-group">
+            <label>New Password <span class="required">*</span></label>
+            <input type="password" name="new_password" class="form-input" placeholder="New password" required>
+          </div>
+        <% } %>
+        
+        <!-- REFRESH TOKEN Form -->
+        <% if (ep.path === '/api/auth/refresh' && ep.method === 'POST') { %>
+          <div class="form-group">
+            <label>Refresh Token <span class="required">*</span></label>
+            <input type="text" name="refresh_token" class="form-input" placeholder="Your refresh token" required>
+          </div>
+        <% } %>
+        
+        <!-- ADMIN: GET ALL USERS Form -->
+        <% if (ep.path === '/api/admin/users' && ep.method === 'GET') { %>
+          <div class="form-group">
+            <label>Page (optional)</label>
+            <input type="number" name="page" class="form-input" placeholder="1" value="1">
+          </div>
+          <div class="form-group">
+            <label>Limit (optional)</label>
+            <input type="number" name="limit" class="form-input" placeholder="20" value="20">
+          </div>
+        <% } %>
+        
+        <!-- ADMIN: ACTIVATE USER Form -->
+        <% if (ep.path === '/api/admin/users/:id/activate' && ep.method === 'PUT') { %>
+          <div class="form-group">
+            <label>User ID <span class="required">*</span></label>
+            <input type="text" name="param_id" class="form-input" placeholder="User ID" required>
+          </div>
+          <div class="form-group">
+            <label>Active Status</label>
+            <select name="is_active" class="form-input">
+              <option value="true">Activate</option>
+              <option value="false">Deactivate</option>
+            </select>
+          </div>
+        <% } %>
+        
+        <!-- ADMIN: DELETE USER Form -->
+        <% if (ep.path === '/api/admin/users/:id' && ep.method === 'DELETE') { %>
+          <div class="form-group">
+            <label>User ID <span class="required">*</span></label>
+            <input type="text" name="param_id" class="form-input" placeholder="User ID" required>
+          </div>
+        <% } %>
+        
+        <!-- ADMIN: GET USER BY ID Form -->
+        <% if (ep.path === '/api/admin/users/:id' && ep.method === 'GET') { %>
+          <div class="form-group">
+            <label>User ID <span class="required">*</span></label>
+            <input type="text" name="param_id" class="form-input" placeholder="User ID" required>
+          </div>
+        <% } %>
+        
         <!-- Features and Significants TEXT FIELDS -->
         <% if ((ep.path.includes('/features') || ep.path.includes('/significants')) && (ep.method === 'POST' || ep.method === 'PUT')) { %>
           
           <!-- Title Field - REQUIRED -->
           <div class="form-group">
-            <label>Title <span class="required" style="color:#ef4444;">*</span></label>
+            <label>Title <span class="required">*</span></label>
             <input type="text" name="title" class="form-input" placeholder="Enter title" required>
-            <small style="color:#ef4444; display:none;" class="title-error">Title is required</small>
           </div>
           
           <!-- Description Field - REQUIRED -->
           <div class="form-group">
-            <label>Description <span class="required" style="color:#ef4444;">*</span></label>
+            <label>Description <span class="required">*</span></label>
             <textarea name="description" class="form-textarea" rows="4" placeholder="Enter description" required></textarea>
-            <small style="color:#ef4444; display:none;" class="desc-error">Description is required</small>
           </div>
           
           <!-- Features Specific Fields -->
@@ -110,7 +243,7 @@
             <input type="text" name="thumbnail_url" class="form-input" placeholder="https://example.com/thumb.jpg">
           </div>
           
-        <% } else if (ep.body) { %>
+        <% } else if (ep.body && !ep.path.includes('/auth')) { %>
           <!-- JSON Editor for other endpoints -->
           <div class="form-group">
             <label>Request Body (JSON)</label>
@@ -119,31 +252,39 @@
           </div>
         <% } %>
         
-        <!-- Authentication -->
-        <% if (ep.auth && ep.auth !== 'none') { %>
-          <div class="form-group auth-group">
-            <label>Authentication</label>
-            <% if (ep.auth === 'user') { %>
-              <input type="text" name="auth_token" placeholder="Bearer Token" class="form-input">
-              <small>Enter your JWT access token</small>
-            <% } else if (ep.auth === 'admin') { %>
-              <div class="admin-key-container">
-                <div class="admin-key-header">
-                  <svg class="key-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 2L15 8M7 15L2 20M12 12L9 9M17 7L14 4 20 10 17 7zM7 17L4 20"/>
-                  </svg>
-                  <span>Admin API Key</span>
-                </div>
-                <div class="admin-key-display">
-                  <code class="admin-key-code">•••••••••••••••••••••••••••••••••••</code>
-                  <button type="button" class="btn-copy-key" data-action="copy-admin-key">📋 Copy</button>
-                </div>
-                <input type="hidden" name="admin_key" class="admin-key-input" value="a7f3e8d9c2b1h4k6m9n2p5q8r3t6w1x4y7z0">
-                <small>This key is automatically added to requests</small>
+        <!-- Authentication Section -->
+        <div class="form-group auth-group">
+          <label>Authentication</label>
+          
+          <!-- Bearer Token for User endpoints -->
+          <% if (ep.auth === 'user') { %>
+            <input type="text" name="auth_token" class="form-input" placeholder="Bearer Token (JWT)">
+            <small>Enter your JWT access token from login</small>
+          <% } %>
+          
+          <!-- Admin API Key for Admin endpoints -->
+          <% if (ep.auth === 'admin') { %>
+            <div class="admin-key-container">
+              <div class="admin-key-header">
+                <i class="fas fa-key"></i>
+                <span>Admin API Key</span>
               </div>
-            <% } %>
-          </div>
-        <% } %>
+              <div class="admin-key-display">
+                <code class="admin-key-code">•••••••••••••••••••••••••••••••••••</code>
+                <button type="button" class="btn-copy-key" data-action="copy-admin-key">📋 Copy</button>
+              </div>
+              <input type="hidden" name="admin_key" class="admin-key-input" value="a7f3e8d9c2b1h4k6m9n2p5q8r3t6w1x4y7z0">
+              <small>This key is automatically added to requests</small>
+            </div>
+          <% } %>
+          
+          <!-- No Auth for Public endpoints -->
+          <% if (!ep.auth) { %>
+            <div class="info-message">
+              <i class="fas fa-globe"></i> This is a public endpoint - no authentication required
+            </div>
+          <% } %>
+        </div>
         
         <button type="submit" class="btn-send">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
