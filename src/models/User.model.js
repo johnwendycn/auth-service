@@ -1,72 +1,157 @@
-// MODEL: database queries only. No business logic.
-const { pool } = require('../config/database');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/sequelize');
 
-module.exports = {
-  async create({ email, password_hash, full_name, email_verification_token, email_verification_expires }) {
-    const result = await pool.query(
-      `INSERT INTO users (email, password_hash, full_name, email_verification_token, email_verification_expires, is_email_verified, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id`,
-      [email, password_hash, full_name, email_verification_token, email_verification_expires, false, true]
-    );
-    return result.rows[0].id;
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
+    primaryKey: true
   },
+  email: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true
+    }
+  },
+  password_hash: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  },
+  full_name: {
+    type: DataTypes.STRING(255),
+    allowNull: false
+  },
+  is_email_verified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  email_verification_token: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  email_verification_expires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  password_reset_token: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  password_reset_expires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+  last_login_at: {
+    type: DataTypes.DATE,
+    allowNull: true
+  }
+}, {
+  tableName: 'users',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
+});
 
-  async findByEmail(email) {
-    const result = await pool.query(`SELECT * FROM users WHERE email = $1 LIMIT 1`, [email]);
-    return result.rows[0] || null;
-  },
-
-  async findById(id) {
-    const result = await pool.query(`SELECT * FROM users WHERE id = $1 LIMIT 1`, [id]);
-    return result.rows[0] || null;
-  },
-
-  async findByVerificationToken(token) {
-    const result = await pool.query(
-      `SELECT * FROM users WHERE email_verification_token = $1 LIMIT 1`, [token]
-    );
-    return result.rows[0] || null;
-  },
-
-  async findByResetToken(token) {
-    const result = await pool.query(
-      `SELECT * FROM users WHERE password_reset_token = $1 LIMIT 1`, [token]
-    );
-    return result.rows[0] || null;
-  },
-
-  async update(id, fields) {
-    const keys = Object.keys(fields);
-    if (!keys.length) return 0;
-    
-    // Build dynamic UPDATE query for PostgreSQL
-    const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
-    const values = keys.map(key => fields[key]);
-    values.push(id);
-    
-    const result = await pool.query(
-      `UPDATE users SET ${setClause} WHERE id = $${values.length} RETURNING id`,
-      values
-    );
-    return result.rowCount || 0;
-  },
-
-  async delete(id) {
-    const result = await pool.query(`DELETE FROM users WHERE id = $1`, [id]);
-    return result.rowCount || 0;
-  },
-
-  async list({ limit = 20, offset = 0 }) {
-    const rows = await pool.query(
-      `SELECT id, email, full_name, is_email_verified, is_active, last_login_at, created_at
-       FROM users ORDER BY id DESC LIMIT $1 OFFSET $2`,
-      [limit, offset]
-    );
-    
-    const totalResult = await pool.query(`SELECT COUNT(*) AS total FROM users`);
-    const total = parseInt(totalResult.rows[0].total);
-    
-    return { rows: rows.rows, total };
-  },
+// Static methods
+User.createUser = async function(data) {
+  return await this.create(data);
 };
+
+User.findByEmail = async function(email) {
+  return await this.findOne({ where: { email } });
+};
+
+User.findById = async function(id) {
+  return await this.findByPk(id);
+};
+
+User.findByVerificationToken = async function(token) {
+  return await this.findOne({ where: { email_verification_token: token } });
+};
+
+User.findByResetToken = async function(token) {
+  return await this.findOne({ where: { password_reset_token: token } });
+};
+
+User.updateUser = async function(id, fields) {
+  await this.update(fields, { where: { id } });
+  return await this.findByPk(id);
+};
+
+User.deleteUser = async function(id) {
+  return await this.destroy({ where: { id } });
+};
+
+User.list = async function({ limit = 20, offset = 0 }) {
+  const { rows, count } = await this.findAndCountAll({
+    limit,
+    offset,
+    order: [['id', 'DESC']],
+    attributes: ['id', 'email', 'full_name', 'is_email_verified', 'is_active', 'last_login_at', 'created_at']
+  });
+  return { rows, total: count };
+};
+
+User.count = async function() {
+  return await this.count();
+};
+
+User.verifyEmail = async function(id) {
+  await this.update(
+    { is_email_verified: true, email_verification_token: null, email_verification_expires: null },
+    { where: { id } }
+  );
+  return await this.findByPk(id);
+};
+
+User.setVerificationToken = async function(id, token, expires) {
+  await this.update(
+    { email_verification_token: token, email_verification_expires: expires },
+    { where: { id } }
+  );
+};
+
+User.setResetToken = async function(id, token, expires) {
+  await this.update(
+    { password_reset_token: token, password_reset_expires: expires },
+    { where: { id } }
+  );
+};
+
+User.clearResetToken = async function(id) {
+  await this.update(
+    { password_reset_token: null, password_reset_expires: null },
+    { where: { id } }
+  );
+};
+
+User.updatePassword = async function(id, hashedPassword) {
+  await this.update(
+    { password_hash: hashedPassword, password_reset_token: null, password_reset_expires: null },
+    { where: { id } }
+  );
+};
+
+User.updateLastLogin = async function(id) {
+  await this.update(
+    { last_login_at: new Date() },
+    { where: { id } }
+  );
+};
+
+User.emailExists = async function(email) {
+  const count = await this.count({ where: { email } });
+  return count > 0;
+};
+
+User.findByEmailWithPassword = async function(email) {
+  return await this.findOne({ where: { email } });
+};
+
+module.exports = User;

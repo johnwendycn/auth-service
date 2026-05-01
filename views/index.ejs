@@ -5,10 +5,531 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= serviceName %> — Compassionate Capitalism Endpoint</title>
   <meta name="description" content="Centralized authentication microservice with RS256 JWTs, refresh token rotation, and JWKS distribution for distributed subsystems." />
-  <link rel="stylesheet" href="/css/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: rgb(176, 0, 31);
+      --primary-dark: rgb(140, 0, 25);
+      --primary-light: rgb(200, 30, 60);
+      --text-light: #ffffff;
+      --text-dark: #1a1a1a;
+      --bg-dark: #0a0a0a;
+      --bg-gray: #f5f5f5;
+      --border: #e0e0e0;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* Header */
+    .topbar {
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .topbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+    }
+    
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 20px;
+      color: white;
+    }
+    
+    .brand-mark {
+      font-size: 28px;
+    }
+    
+    .topnav {
+      display: flex;
+      gap: 24px;
+    }
+    
+    .topnav a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    
+    .topnav a:hover {
+      color: white;
+    }
+    
+    .pill {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    
+    /* Hero Section */
+    .hero {
+      padding: 80px 0;
+      text-align: center;
+    }
+    
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.8;
+    }
+    
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 800;
+      margin: 24px 0;
+      line-height: 1.2;
+    }
+    
+    .lede {
+      font-size: 20px;
+      max-width: 800px;
+      margin: 0 auto 32px;
+      opacity: 0.9;
+    }
+    
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+    
+    .btn {
+      padding: 12px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-ghost {
+      border: 2px solid white;
+      color: white;
+    }
+    
+    .btn-ghost:hover {
+      background: white;
+      color: var(--primary);
+    }
+    
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    
+    .meta-item {
+      text-align: center;
+    }
+    
+    .meta-item strong {
+      display: block;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+    
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #10b981;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    /* Sections */
+    .section {
+      background: white;
+      color: var(--text-dark);
+      border-radius: 16px;
+      padding: 48px;
+      margin-bottom: 48px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section h2 {
+      font-size: 32px;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+    
+    .section .muted {
+      color: #666;
+      margin-bottom: 32px;
+    }
+    
+    /* Cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+    
+    .card {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: transform 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card h3 {
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+    
+    /* Steps */
+    .steps {
+      list-style: none;
+    }
+    
+    .steps li {
+      margin-bottom: 32px;
+    }
+    
+    .steps h4 {
+      margin-bottom: 8px;
+    }
+    
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+    }
+    
+    /* Endpoint Cards */
+    .endpoint-card {
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    
+    .method-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    
+    .method-get { background: #10b981; color: white; }
+    .method-post { background: #3b82f6; color: white; }
+    .method-put { background: #f59e0b; color: white; }
+    .method-delete { background: #ef4444; color: white; }
+    
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      background: #e0e0e0;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .endpoint-title {
+      flex: 1;
+      font-size: 18px;
+      color: var(--primary);
+    }
+    
+    .auth-badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .auth-admin { background: #ef4444; color: white; }
+    .auth-user { background: #3b82f6; color: white; }
+    
+    .endpoint-description {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    
+    /* Interactive Tabs */
+    .interactive-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 20px;
+    }
+    
+    .tab-btn {
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: -2px;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Forms */
+    .input-group {
+      margin-bottom: 16px;
+    }
+    
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .param-type {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+    }
+    
+    .json-editor {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    
+    .btn-send {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-send:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    
+    .response-area {
+      margin-top: 20px;
+    }
+    
+    .response-data {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    
+    /* Code Wrapper */
+    .code-wrapper {
+      position: relative;
+    }
+    
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    /* Pagination */
+    .pagination-wrapper {
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+    
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .page-nav {
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .page-nav:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .page-size-select {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    
+    .table-responsive {
+      overflow-x: auto;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th {
+      background: var(--primary);
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .data-table tr:hover {
+      background: rgba(176, 0, 31, 0.05);
+    }
+    
+    .loading-row td {
+      text-align: center;
+      color: #999;
+    }
+    
+    /* Footer */
+    .footer {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 32px 0;
+      margin-top: 48px;
+    }
+    
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+    }
+    
+    .footer-links a:hover {
+      color: white;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 32px; }
+      .lede { font-size: 16px; }
+      .topnav { display: none; }
+      .section { padding: 24px; }
+      .hero-meta { gap: 24px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -31,12 +552,11 @@
   <section class="hero">
     <div class="container hero-inner">
       <span class="eyebrow">Compassionate Capitalism Endpoint</span>
-      <h1>Centralized authentication, distributed by design.</h1>
+      <h1>Centralized authentication,<br>distributed by design.</h1>
       <p class="lede">
         A production-grade auth microservice that issues RS256 JSON Web Tokens
         and publishes its public key over JWKS so every subsystem — Periodic Income,
-        Credit, Justice — can verify identities locally, with zero
-        round-trips to a central authority.
+        Credit, Justice — can verify identities locally, with zero round-trips.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#quickstart">Get started</a>
@@ -46,13 +566,12 @@
         <div class="meta-item"><strong>Algorithm</strong><span>RS256 / 2048-bit</span></div>
         <div class="meta-item"><strong>Discovery</strong><span>/.well-known/jwks.json</span></div>
         <div class="meta-item"><strong>Issuer</strong><span><%= issuer %></span></div>
-        <div class="meta-item"><strong>Status</strong><span class="status-dot">Operational</span></div>
+        <div class="meta-item"><strong>Status</strong><span class="status-dot"></span>Operational</div>
       </div>
     </div>
   </section>
 
   <main class="container">
-    <!-- Overview -->
     <section id="overview" class="section">
       <h2>Overview</h2>
       <p class="muted">
@@ -62,211 +581,87 @@
         hot path — they verify tokens locally using the public key exposed
         at <code>/.well-known/jwks.json</code>.
       </p>
-
       <div class="grid grid-3">
         <article class="card">
-          <h3>Asymmetric trust</h3>
+          <h3>🔐 Asymmetric trust</h3>
           <p>RS256 keypairs let subsystems verify tokens without holding any secret. Rotate keys without redeploying clients.</p>
         </article>
         <article class="card">
-          <h3>Refresh rotation</h3>
+          <h3>🔄 Refresh rotation</h3>
           <p>Long-lived opaque refresh tokens are rotated on every use and revoked on password change, reset, or deactivation.</p>
         </article>
         <article class="card">
-          <h3>Operational primitives</h3>
+          <h3>⚙️ Operational primitives</h3>
           <p>Email verification, password reset, account deactivation, JTI blacklisting, rate limiting, and structured logs out of the box.</p>
         </article>
       </div>
     </section>
 
-    <!-- Quickstart -->
     <section id="quickstart" class="section">
       <h2>Quickstart</h2>
       <p class="muted">From clone to a running service in under five minutes.</p>
-
       <ol class="steps">
-        <li>
-          <h4>1. Install dependencies</h4>
-<pre><code class="lang-bash">npm install</code></pre>
-        </li>
-        <li>
-          <h4>2. Configure environment</h4>
-<pre><code class="lang-bash">cp .env.example .env
-# Edit DB_*, SMTP_*, ADMIN_API_KEY, JWT_ISSUER</code></pre>
-        </li>
-        <li>
-          <h4>3. Generate the RS256 keypair</h4>
-<pre><code class="lang-bash">npm run keys:generate
-# Writes keys/private.pem and keys/public.pem (chmod 600)</code></pre>
-        </li>
-        <li>
-          <h4>4. Run database migrations</h4>
-<pre><code class="lang-bash">npm run migrate</code></pre>
-        </li>
-        <li>
-          <h4>5. Start the service</h4>
-<pre><code class="lang-bash">npm run dev      # development with auto-reload
-npm start        # production</code></pre>
-        </li>
+        <li><h4>1. Install dependencies</h4><pre><code>npm install</code></pre></li>
+        <li><h4>2. Configure environment</h4><pre><code>cp .env.example .env\n# Edit DB_*, SMTP_*, ADMIN_API_KEY, JWT_ISSUER</code></pre></li>
+        <li><h4>3. Generate the RS256 keypair</h4><pre><code>npm run keys:generate</code></pre></li>
+        <li><h4>4. Run database migrations</h4><pre><code>npm run migrate</code></pre></li>
+        <li><h4>5. Start the service</h4><pre><code>npm run dev      # development\nnpm start        # production</code></pre></li>
       </ol>
     </section>
 
-    <!-- Endpoints -->
     <section id="endpoints" class="section">
       <h2>API Reference</h2>
-      <p class="muted">
-        Base URL: <code><%= baseUrl %></code>. All request and response
-        bodies are JSON. Errors follow
-        <code>{ "error": { "code", "message" } }</code>.
-      </p>
-
-      <h3 class="group-title">Public</h3>
+      <p class="muted">Base URL: <code><%= baseUrl %></code>. All request and response bodies are JSON.</p>
+      
+      <h3 style="margin-top: 32px;">🌐 Public Endpoints</h3>
       <% publicEndpoints.forEach(function(ep) { %>
         <%- include('partials/endpoint', { ep: ep }) %>
       <% }) %>
-
-      <h3 class="group-title">Authenticated</h3>
-      <p class="muted small">Send <code>Authorization: Bearer &lt;access_token&gt;</code>.</p>
+      
+      <h3 style="margin-top: 48px;">🔒 Authenticated Endpoints</h3>
+      <p class="muted">Send <code>Authorization: Bearer &lt;access_token&gt;</code></p>
       <% protectedEndpoints.forEach(function(ep) { %>
         <%- include('partials/endpoint', { ep: ep }) %>
       <% }) %>
-
-      <h3 class="group-title">Administrative</h3>
-      <p class="muted small">Send <code>X-Admin-Api-Key: &lt;ADMIN_API_KEY&gt;</code>.</p>
+      
+      <h3 style="margin-top: 48px;">👑 Admin Endpoints</h3>
+      <p class="muted">Send <code>X-Admin-Api-Key: &lt;ADMIN_API_KEY&gt;</code></p>
       <% adminEndpoints.forEach(function(ep) { %>
         <%- include('partials/endpoint', { ep: ep }) %>
       <% }) %>
     </section>
 
-    <!-- Integration -->
     <section id="integration" class="section">
-      <h2>Integrating a subsystem</h2>
-      <p class="muted">
-        Subsystems verify access tokens locally using the public key from
-        the JWKS endpoint. Cache the JWKS response and refresh on
-        <code>kid</code> miss.
-      </p>
-
-      <div class="tabs">
-        <button class="tab active" data-tab="node">Node.js</button>
-        <button class="tab" data-tab="python">Python</button>
-        <button class="tab" data-tab="go">Go</button>
-      </div>
-
-      <div class="tab-panel active" data-panel="node">
-<pre><code class="lang-js">const jwt = require('jsonwebtoken');
+      <h2>Integration Guide</h2>
+      <p class="muted">Verify tokens locally using the JWKS endpoint.</p>
+      <pre><code class="language-javascript">const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
 const client = jwksClient({
   jwksUri: '<%= baseUrl %>/.well-known/jwks.json',
-  cache: true,
-  cacheMaxAge: 10 * 60 * 1000,
+  cache: true
 });
 
-function getKey(header, cb) {
-  client.getSigningKey(header.kid, (err, key) =>
-    cb(err, key && key.getPublicKey())
-  );
-}
-
-function verify(token) {
+function verifyToken(token) {
   return new Promise((resolve, reject) => {
-    jwt.verify(
-      token,
-      getKey,
-      { algorithms: ['RS256'], issuer: '<%= issuer %>' },
-      (err, payload) => (err ? reject(err) : resolve(payload))
-    );
+    jwt.verify(token, (header, cb) => {
+      client.getSigningKey(header.kid, (err, key) => {
+        cb(err, key?.getPublicKey());
+      });
+    }, { algorithms: ['RS256'] }, (err, decoded) => {
+      err ? reject(err) : resolve(decoded);
+    });
   });
 }</code></pre>
-      </div>
-
-      <div class="tab-panel" data-panel="python">
-<pre><code class="lang-python">import jwt
-from jwt import PyJWKClient
-
-JWKS_URL = "<%= baseUrl %>/.well-known/jwks.json"
-jwks = PyJWKClient(JWKS_URL)
-
-def verify(token: str) -> dict:
-    signing_key = jwks.get_signing_key_from_jwt(token).key
-    return jwt.decode(
-        token,
-        signing_key,
-        algorithms=["RS256"],
-        issuer="<%= issuer %>",
-    )</code></pre>
-      </div>
-
-      <div class="tab-panel" data-panel="go">
-<pre><code class="lang-go">import (
-  "github.com/golang-jwt/jwt/v5"
-  "github.com/MicahParks/keyfunc/v3"
-)
-
-k, _ := keyfunc.NewDefault([]string{"<%= baseUrl %>/.well-known/jwks.json"})
-
-token, err := jwt.Parse(raw, k.Keyfunc,
-  jwt.WithValidMethods([]string{"RS256"}),
-  jwt.WithIssuer("<%= issuer %>"),
-)</code></pre>
-      </div>
-
-      <h3>Token payload</h3>
-<pre><code class="lang-json">{
-  "sub": "42",
-  "email": "user@example.com",
-  "name": "Jane Doe",
-  "iat": 1714000000,
-  "exp": 1714000900,
-  "iss": "<%= issuer %>",
-  "jti": "8b1a9953-c761-4e78-9c1c-..."
-}</code></pre>
     </section>
 
-    <!-- Security -->
     <section id="security" class="section">
-      <h2>Security model</h2>
+      <h2>Security Model</h2>
       <div class="grid grid-2">
-        <article class="card">
-          <h3>Password storage</h3>
-          <p>Bcrypt with cost factor 12. Plaintext is never logged. Password change and reset both revoke all active refresh tokens.</p>
-        </article>
-        <article class="card">
-          <h3>Token revocation</h3>
-          <p>Logout blacklists the access token's <code>jti</code> until its natural expiry. Refresh tokens are rotated on every use; reuse fails closed.</p>
-        </article>
-        <article class="card">
-          <h3>Email enumeration</h3>
-          <p><code>/forgot-password</code> always returns success regardless of whether the address exists.</p>
-        </article>
-        <article class="card">
-          <h3>Transport &amp; rate limiting</h3>
-          <p>Helmet sets strict security headers. Auth routes are rate-limited (50 req / 15 min / IP). Always terminate TLS at your edge.</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Operations -->
-    <section id="operations" class="section">
-      <h2>Operations</h2>
-      <div class="grid grid-2">
-        <article class="card">
-          <h3>Health check</h3>
-          <p><code>GET /health</code> returns <code>{ status, uptime }</code>. Wire it to your load balancer and uptime monitor.</p>
-        </article>
-        <article class="card">
-          <h3>Logging</h3>
-          <p>Structured JSON via Winston. Pipe stdout to your log aggregator (Datadog, Loki, CloudWatch).</p>
-        </article>
-        <article class="card">
-          <h3>Key rotation</h3>
-          <p>Generate a new keypair, bump <code>JWT_KID</code>, deploy. Subsystems pick up the new key on next JWKS refresh — no client redeploy required.</p>
-        </article>
-        <article class="card">
-          <h3>Blacklist hygiene</h3>
-          <p>Schedule <code>Blacklist.cleanup()</code> via cron to purge expired entries and keep the table compact.</p>
-        </article>
+        <div class="card"><h3>🔒 Password Storage</h3><p>Bcrypt with cost factor 12. Passwords are never logged or stored in plaintext.</p></div>
+        <div class="card"><h3>🚫 Token Revocation</h3><p>Logout blacklists the access token's JTI until expiry. Refresh tokens rotate on each use.</p></div>
+        <div class="card"><h3>📧 Email Enumeration</h3><p><code>/forgot-password</code> always returns success regardless of email existence.</p></div>
+        <div class="card"><h3>🛡️ Rate Limiting</h3><p>Auth routes limited to 50 requests per 15 minutes per IP.</p></div>
       </div>
     </section>
   </main>
@@ -275,7 +670,7 @@ token, err := jwt.Parse(raw, k.Keyfunc,
     <div class="container footer-inner">
       <div>
         <strong><%= serviceName %></strong>
-        <p class="muted small">Compassionate Capitalism Endpoint · v<%= version %></p>
+        <p class="muted small" style="margin-top: 8px;">Compassionate Capitalism Endpoint · v<%= version %></p>
       </div>
       <div class="footer-links">
         <a href="/.well-known/jwks.json">JWKS</a>
@@ -285,6 +680,141 @@ token, err := jwt.Parse(raw, k.Keyfunc,
     </div>
   </footer>
 
-  <script src="/js/app.js"></script>
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.endpoint-interactive');
+        const tabName = btn.dataset.tab;
+        
+        card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        card.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+          if (content.dataset.content === tabName) content.classList.add('active');
+        });
+        btn.classList.add('active');
+      });
+    });
+    
+    // API testing
+    document.querySelectorAll('.api-tester').forEach(form => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const method = form.dataset.method;
+        let path = form.dataset.path;
+        const auth = form.dataset.auth;
+        
+        // Build URL with params
+        const params = {};
+        form.querySelectorAll('[name^="param_"]').forEach(input => {
+          if (input.value) params[input.name.replace('param_', '')] = input.value;
+        });
+        
+        let url = `${window.location.origin}${path}`;
+        Object.entries(params).forEach(([key, value]) => {
+          url = url.replace(`:${key}`, value);
+        });
+        
+        // Headers
+        const headers = {};
+        if (auth === 'user') {
+          const token = form.querySelector('[name="auth_token"]')?.value;
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+        } else if (auth === 'admin') {
+          const apiKey = form.querySelector('[name="admin_key"]')?.value;
+          if (apiKey) headers['X-Admin-Api-Key'] = apiKey;
+        }
+        
+        // Body
+        let body = null;
+        const bodyText = form.querySelector('[name="body"]')?.value;
+        if (bodyText && (method === 'POST' || method === 'PUT')) {
+          try {
+            body = JSON.parse(bodyText);
+            headers['Content-Type'] = 'application/json';
+          } catch (err) {
+            alert('Invalid JSON in request body');
+            return;
+          }
+        }
+        
+        const responseArea = form.querySelector('.response-area');
+        const responseData = form.querySelector('.response-data');
+        responseArea.style.display = 'block';
+        responseData.textContent = 'Loading...';
+        
+        try {
+          const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined });
+          const data = await res.json();
+          responseData.textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          responseData.textContent = JSON.stringify({ error: err.message }, null, 2);
+        }
+      });
+    });
+    
+    // Copy code
+    window.copyCode = (btn) => {
+      const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+      navigator.clipboard.writeText(code);
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy', 2000);
+    };
+    
+    // Pagination
+    let currentPage = 1;
+    let pageSize = 25;
+    
+    async function loadTable(container, endpoint, page, size) {
+      const tbody = container.querySelector('.table-body');
+      tbody.innerHTML = '<tr><td colspan="100">Loading...</td></tr>';
+      
+      try {
+        const res = await fetch(`${window.location.origin}${endpoint}?limit=${size}&offset=${(page-1)*size}`);
+        const data = await res.json();
+        
+        if (data.data && data.data.length) {
+          tbody.innerHTML = data.data.map(item => `
+            <tr>${Object.values(item).slice(0, container.querySelectorAll('th').length).map(val => `<td>${val || '-'}</td>`).join('')}</tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="100">No data available</td></tr>';
+        }
+        
+        container.querySelector('.current-page').textContent = page;
+        container.querySelector('.total-pages').textContent = Math.ceil((data.pagination?.total || 1) / size);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="100">Error loading data</td></tr>';
+      }
+    }
+    
+    document.querySelectorAll('.pagination-wrapper').forEach(container => {
+      const endpoint = container.dataset.endpoint;
+      loadTable(container, endpoint, currentPage, pageSize);
+      
+      container.querySelector('[data-action="first"]')?.addEventListener('click', () => {
+        currentPage = 1;
+        loadTable(container, endpoint, currentPage, pageSize);
+      });
+      
+      container.querySelector('[data-action="prev"]')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadTable(container, endpoint, currentPage, pageSize);
+        }
+      });
+      
+      container.querySelector('[data-action="next"]')?.addEventListener('click', () => {
+        currentPage++;
+        loadTable(container, endpoint, currentPage, pageSize);
+      });
+      
+      container.querySelector('.page-size-select')?.addEventListener('change', (e) => {
+        pageSize = parseInt(e.target.value);
+        currentPage = 1;
+        loadTable(container, endpoint, currentPage, pageSize);
+      });
+    });
+  </script>
 </body>
 </html>

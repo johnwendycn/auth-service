@@ -1,20 +1,119 @@
-<article class="endpoint">
-  <header class="endpoint-head">
-    <span class="method method-<%= ep.method.toLowerCase() %>"><%= ep.method %></span>
-    <code class="endpoint-path"><%= ep.path %></code>
-    <span class="endpoint-name"><%= ep.name %></span>
-  </header>
-  <p class="endpoint-desc"><%= ep.description %></p>
-  <% if (ep.body) { %>
-    <div class="endpoint-block">
-      <h5>Request body</h5>
-<pre><code class="lang-json"><%= ep.body %></code></pre>
+<article class="endpoint-card">
+  <div class="endpoint-header">
+    <div class="endpoint-method">
+      <span class="method-badge method-<%= ep.method.toLowerCase() %>"><%= ep.method %></span>
+      <code class="endpoint-path"><%= ep.path %></code>
     </div>
-  <% } %>
-  <% if (ep.response) { %>
-    <div class="endpoint-block">
-      <h5>Response · 2xx</h5>
-<pre><code class="lang-json"><%= ep.response %></code></pre>
+    <h3 class="endpoint-title"><%= ep.name %></h3>
+    <% if (ep.auth) { %>
+      <span class="auth-badge auth-<%= ep.auth %>">
+        <%= ep.auth === 'admin' ? '🔒 Admin Only' : (ep.auth === 'user' ? '🔐 Authenticated' : '🌐 Public') %>
+      </span>
+    <% } %>
+  </div>
+  
+  <p class="endpoint-description"><%= ep.description %></p>
+  
+  <div class="endpoint-interactive">
+    <div class="interactive-tabs">
+      <button class="tab-btn active" data-tab="try">🚀 Try It</button>
+      <button class="tab-btn" data-tab="code">💻 Code Example</button>
+      <button class="tab-btn" data-tab="response">📋 Response</button>
     </div>
-  <% } %>
+    
+    <!-- Try It Tab -->
+    <div class="tab-content active" data-content="try">
+      <form class="api-tester" data-method="<%= ep.method %>" data-path="<%= ep.path %>" data-auth="<%= ep.auth %>">
+        <% if (ep.params && ep.params.length) { %>
+          <div class="params-section">
+            <h4>Parameters</h4>
+            <% ep.params.forEach(function(param) { %>
+              <div class="input-group">
+                <label><%= param.name %> <span class="param-type">(<%= param.in %>)</span></label>
+                <input type="text" name="param_<%= param.name %>" placeholder="<%= param.desc %>" class="form-control">
+                <small><%= param.desc %></small>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+        
+        <% if (ep.body) { %>
+          <div class="body-section">
+            <h4>Request Body</h4>
+            <textarea name="body" class="form-control json-editor" rows="6"><%= typeof ep.body === 'object' ? JSON.stringify(ep.body, null, 2) : ep.body %></textarea>
+          </div>
+        <% } %>
+        
+        <% if (ep.auth && ep.auth !== 'none') { %>
+          <div class="auth-section">
+            <h4>Authentication</h4>
+            <% if (ep.auth === 'user') { %>
+              <div class="input-group">
+                <label>Bearer Token</label>
+                <input type="text" name="auth_token" placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." class="form-control">
+              </div>
+            <% } else if (ep.auth === 'admin') { %>
+              <div class="input-group">
+                <label>Admin API Key</label>
+                <input type="password" name="admin_key" placeholder="your-admin-api-key" class="form-control">
+              </div>
+            <% } %>
+          </div>
+        <% } %>
+        
+        <button type="submit" class="btn-send">Send Request</button>
+        <div class="response-area" style="display:none;">
+          <h4>Response</h4>
+          <pre class="response-data"></pre>
+        </div>
+      </form>
+    </div>
+    
+    <!-- Code Example Tab -->
+    <div class="tab-content" data-content="code">
+      <div class="code-wrapper">
+        <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+        <pre><code class="language-javascript"><%= ep.jsExample || '// Example not available' %></code></pre>
+      </div>
+    </div>
+    
+    <!-- Response Tab -->
+    <div class="tab-content" data-content="response">
+      <div class="code-wrapper">
+        <pre><code class="language-json"><%= typeof ep.response === 'object' ? JSON.stringify(ep.response, null, 2) : (ep.response || '{}') %></code></pre>
+      </div>
+    </div>
+  </div>
 </article>
+
+<% if (ep.method === 'GET' && ep.isList) { %>
+  <div class="pagination-wrapper" data-endpoint="<%= ep.path %>">
+    <div class="pagination-controls">
+      <button class="page-nav" data-action="first">⏮ First</button>
+      <button class="page-nav" data-action="prev">◀ Prev</button>
+      <span class="page-info">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+      <button class="page-nav" data-action="next">Next ▶</button>
+      <button class="page-nav" data-action="last">Last ⏭</button>
+      <select class="page-size-select">
+        <option value="10">10 per page</option>
+        <option value="25" selected>25 per page</option>
+        <option value="50">50 per page</option>
+        <option value="100">100 per page</option>
+      </select>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <% ep.tableHeaders?.forEach(function(header) { %>
+              <th><%= header %></th>
+            <% }) %>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr class="loading-row"><td colspan="100">Loading data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
